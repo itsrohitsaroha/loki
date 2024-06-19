@@ -1,0 +1,4176 @@
+apiVersion: v1
+items:
+- apiVersion: v1
+  kind: Pod
+  metadata:
+    annotations:
+      checksum/config: 62dcad17d9932a80434500de5e3f7436f2fd18340468da00fd85c5dbf77a95e9
+      cni.projectcalico.org/containerID: 3ed91f31705059cfce78b2a3f86218c1e3943fac773859cbd681a891c7dd2201
+      cni.projectcalico.org/podIP: 192.168.1.11/32
+      cni.projectcalico.org/podIPs: 192.168.1.11/32
+    creationTimestamp: "2024-06-19T05:53:34Z"
+    generateName: loki-backend-
+    labels:
+      app.kubernetes.io/component: backend
+      app.kubernetes.io/instance: loki
+      app.kubernetes.io/name: loki
+      app.kubernetes.io/part-of: memberlist
+      apps.kubernetes.io/pod-index: "0"
+      controller-revision-hash: loki-backend-7bc764695
+      statefulset.kubernetes.io/pod-name: loki-backend-0
+    name: loki-backend-0
+    namespace: default
+    ownerReferences:
+    - apiVersion: apps/v1
+      blockOwnerDeletion: true
+      controller: true
+      kind: StatefulSet
+      name: loki-backend
+      uid: 2ff12b81-3e90-42a7-bc27-b0f662a33012
+    resourceVersion: "2934"
+    uid: b4b78e74-24a3-4a1e-b0be-470319e99276
+  spec:
+    affinity:
+      podAntiAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchLabels:
+              app.kubernetes.io/component: backend
+          topologyKey: kubernetes.io/hostname
+    automountServiceAccountToken: true
+    containers:
+    - env:
+      - name: METHOD
+        value: WATCH
+      - name: LABEL
+        value: loki_rule
+      - name: FOLDER
+        value: /rules
+      - name: RESOURCE
+        value: both
+      - name: WATCH_SERVER_TIMEOUT
+        value: "60"
+      - name: WATCH_CLIENT_TIMEOUT
+        value: "60"
+      - name: LOG_LEVEL
+        value: INFO
+      image: kiwigrid/k8s-sidecar:1.24.3
+      imagePullPolicy: IfNotPresent
+      name: loki-sc-rules
+      resources: {}
+      terminationMessagePath: /dev/termination-log
+      terminationMessagePolicy: File
+      volumeMounts:
+      - mountPath: /rules
+        name: sc-rules-volume
+      - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+        name: kube-api-access-sfpd8
+        readOnly: true
+    - args:
+      - -config.file=/etc/loki/config/config.yaml
+      - -target=backend
+      - -legacy-read-mode=false
+      image: docker.io/grafana/loki:3.0.0
+      imagePullPolicy: IfNotPresent
+      name: loki
+      ports:
+      - containerPort: 3100
+        name: http-metrics
+        protocol: TCP
+      - containerPort: 9095
+        name: grpc
+        protocol: TCP
+      - containerPort: 7946
+        name: http-memberlist
+        protocol: TCP
+      readinessProbe:
+        failureThreshold: 3
+        httpGet:
+          path: /ready
+          port: http-metrics
+          scheme: HTTP
+        initialDelaySeconds: 30
+        periodSeconds: 10
+        successThreshold: 1
+        timeoutSeconds: 1
+      resources: {}
+      securityContext:
+        allowPrivilegeEscalation: false
+        capabilities:
+          drop:
+          - ALL
+        readOnlyRootFilesystem: true
+      terminationMessagePath: /dev/termination-log
+      terminationMessagePolicy: File
+      volumeMounts:
+      - mountPath: /etc/loki/config
+        name: config
+      - mountPath: /etc/loki/runtime-config
+        name: runtime-config
+      - mountPath: /tmp
+        name: tmp
+      - mountPath: /var/loki
+        name: data
+      - mountPath: /rules
+        name: sc-rules-volume
+      - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+        name: kube-api-access-sfpd8
+        readOnly: true
+    dnsPolicy: ClusterFirst
+    enableServiceLinks: true
+    hostname: loki-backend-0
+    nodeName: node01
+    preemptionPolicy: PreemptLowerPriority
+    priority: 0
+    restartPolicy: Always
+    schedulerName: default-scheduler
+    securityContext:
+      fsGroup: 10001
+      runAsGroup: 10001
+      runAsNonRoot: true
+      runAsUser: 10001
+    serviceAccount: loki
+    serviceAccountName: loki
+    subdomain: loki-backend-headless
+    terminationGracePeriodSeconds: 300
+    tolerations:
+    - effect: NoExecute
+      key: node.kubernetes.io/not-ready
+      operator: Exists
+      tolerationSeconds: 300
+    - effect: NoExecute
+      key: node.kubernetes.io/unreachable
+      operator: Exists
+      tolerationSeconds: 300
+    volumes:
+    - name: data
+      persistentVolumeClaim:
+        claimName: data-loki-backend-0
+    - emptyDir: {}
+      name: tmp
+    - configMap:
+        defaultMode: 420
+        items:
+        - key: config.yaml
+          path: config.yaml
+        name: loki
+      name: config
+    - configMap:
+        defaultMode: 420
+        name: loki-runtime
+      name: runtime-config
+    - emptyDir: {}
+      name: sc-rules-volume
+    - name: kube-api-access-sfpd8
+      projected:
+        defaultMode: 420
+        sources:
+        - serviceAccountToken:
+            expirationSeconds: 3607
+            path: token
+        - configMap:
+            items:
+            - key: ca.crt
+              path: ca.crt
+            name: kube-root-ca.crt
+        - downwardAPI:
+            items:
+            - fieldRef:
+                apiVersion: v1
+                fieldPath: metadata.namespace
+              path: namespace
+  status:
+    conditions:
+    - lastProbeTime: null
+      lastTransitionTime: "2024-06-19T05:54:09Z"
+      status: "True"
+      type: PodReadyToStartContainers
+    - lastProbeTime: null
+      lastTransitionTime: "2024-06-19T05:54:02Z"
+      status: "True"
+      type: Initialized
+    - lastProbeTime: null
+      lastTransitionTime: "2024-06-19T05:54:42Z"
+      status: "True"
+      type: Ready
+    - lastProbeTime: null
+      lastTransitionTime: "2024-06-19T05:54:42Z"
+      status: "True"
+      type: ContainersReady
+    - lastProbeTime: null
+      lastTransitionTime: "2024-06-19T05:54:02Z"
+      status: "True"
+      type: PodScheduled
+    containerStatuses:
+    - containerID: containerd://9e0d6767b68dc85c24b5f02d5ce95247e6f64e897f8d3730b2614d814594ef6b
+      image: docker.io/grafana/loki:3.0.0
+      imageID: docker.io/grafana/loki@sha256:757b5fadf816a1396f1fea598152947421fa49cb8b2db1ddd2a6e30fae003253
+      lastState: {}
+      name: loki
+      ready: true
+      restartCount: 0
+      started: true
+      state:
+        running:
+          startedAt: "2024-06-19T05:54:09Z"
+    - containerID: containerd://b519dcf32331fa8beb78fc5d84f40ac4ecbd11dc25f9affa2748b87f3987bdbe
+      image: docker.io/kiwigrid/k8s-sidecar:1.24.3
+      imageID: docker.io/kiwigrid/k8s-sidecar@sha256:5af76eebbba79edf4f7471bf1c3d5f2b40858114730c92d95eafe5716abe1fe8
+      lastState: {}
+      name: loki-sc-rules
+      ready: true
+      restartCount: 0
+      started: true
+      state:
+        running:
+          startedAt: "2024-06-19T05:54:08Z"
+    hostIP: 172.30.2.2
+    hostIPs:
+    - ip: 172.30.2.2
+    phase: Running
+    podIP: 192.168.1.11
+    podIPs:
+    - ip: 192.168.1.11
+    qosClass: BestEffort
+    startTime: "2024-06-19T05:54:02Z"
+- apiVersion: v1
+  kind: Pod
+  metadata:
+    annotations:
+      checksum/config: 62dcad17d9932a80434500de5e3f7436f2fd18340468da00fd85c5dbf77a95e9
+      cni.projectcalico.org/containerID: fa82ec97f78c5f8f08895a426d669ae7583a0e0b7aea166b99af347824b9dc3a
+      cni.projectcalico.org/podIP: 192.168.0.13/32
+      cni.projectcalico.org/podIPs: 192.168.0.13/32
+    creationTimestamp: "2024-06-19T05:53:34Z"
+    generateName: loki-backend-
+    labels:
+      app.kubernetes.io/component: backend
+      app.kubernetes.io/instance: loki
+      app.kubernetes.io/name: loki
+      app.kubernetes.io/part-of: memberlist
+      apps.kubernetes.io/pod-index: "1"
+      controller-revision-hash: loki-backend-7bc764695
+      statefulset.kubernetes.io/pod-name: loki-backend-1
+    name: loki-backend-1
+    namespace: default
+    ownerReferences:
+    - apiVersion: apps/v1
+      blockOwnerDeletion: true
+      controller: true
+      kind: StatefulSet
+      name: loki-backend
+      uid: 2ff12b81-3e90-42a7-bc27-b0f662a33012
+    resourceVersion: "2984"
+    uid: f7285628-33c8-4c23-be74-4dbaca4eb611
+  spec:
+    affinity:
+      podAntiAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchLabels:
+              app.kubernetes.io/component: backend
+          topologyKey: kubernetes.io/hostname
+    automountServiceAccountToken: true
+    containers:
+    - env:
+      - name: METHOD
+        value: WATCH
+      - name: LABEL
+        value: loki_rule
+      - name: FOLDER
+        value: /rules
+      - name: RESOURCE
+        value: both
+      - name: WATCH_SERVER_TIMEOUT
+        value: "60"
+      - name: WATCH_CLIENT_TIMEOUT
+        value: "60"
+      - name: LOG_LEVEL
+        value: INFO
+      image: kiwigrid/k8s-sidecar:1.24.3
+      imagePullPolicy: IfNotPresent
+      name: loki-sc-rules
+      resources: {}
+      terminationMessagePath: /dev/termination-log
+      terminationMessagePolicy: File
+      volumeMounts:
+      - mountPath: /rules
+        name: sc-rules-volume
+      - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+        name: kube-api-access-zjps4
+        readOnly: true
+    - args:
+      - -config.file=/etc/loki/config/config.yaml
+      - -target=backend
+      - -legacy-read-mode=false
+      image: docker.io/grafana/loki:3.0.0
+      imagePullPolicy: IfNotPresent
+      name: loki
+      ports:
+      - containerPort: 3100
+        name: http-metrics
+        protocol: TCP
+      - containerPort: 9095
+        name: grpc
+        protocol: TCP
+      - containerPort: 7946
+        name: http-memberlist
+        protocol: TCP
+      readinessProbe:
+        failureThreshold: 3
+        httpGet:
+          path: /ready
+          port: http-metrics
+          scheme: HTTP
+        initialDelaySeconds: 30
+        periodSeconds: 10
+        successThreshold: 1
+        timeoutSeconds: 1
+      resources: {}
+      securityContext:
+        allowPrivilegeEscalation: false
+        capabilities:
+          drop:
+          - ALL
+        readOnlyRootFilesystem: true
+      terminationMessagePath: /dev/termination-log
+      terminationMessagePolicy: File
+      volumeMounts:
+      - mountPath: /etc/loki/config
+        name: config
+      - mountPath: /etc/loki/runtime-config
+        name: runtime-config
+      - mountPath: /tmp
+        name: tmp
+      - mountPath: /var/loki
+        name: data
+      - mountPath: /rules
+        name: sc-rules-volume
+      - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+        name: kube-api-access-zjps4
+        readOnly: true
+    dnsPolicy: ClusterFirst
+    enableServiceLinks: true
+    hostname: loki-backend-1
+    nodeName: controlplane
+    preemptionPolicy: PreemptLowerPriority
+    priority: 0
+    restartPolicy: Always
+    schedulerName: default-scheduler
+    securityContext:
+      fsGroup: 10001
+      runAsGroup: 10001
+      runAsNonRoot: true
+      runAsUser: 10001
+    serviceAccount: loki
+    serviceAccountName: loki
+    subdomain: loki-backend-headless
+    terminationGracePeriodSeconds: 300
+    tolerations:
+    - effect: NoExecute
+      key: node.kubernetes.io/not-ready
+      operator: Exists
+      tolerationSeconds: 300
+    - effect: NoExecute
+      key: node.kubernetes.io/unreachable
+      operator: Exists
+      tolerationSeconds: 300
+    volumes:
+    - name: data
+      persistentVolumeClaim:
+        claimName: data-loki-backend-1
+    - emptyDir: {}
+      name: tmp
+    - configMap:
+        defaultMode: 420
+        items:
+        - key: config.yaml
+          path: config.yaml
+        name: loki
+      name: config
+    - configMap:
+        defaultMode: 420
+        name: loki-runtime
+      name: runtime-config
+    - emptyDir: {}
+      name: sc-rules-volume
+    - name: kube-api-access-zjps4
+      projected:
+        defaultMode: 420
+        sources:
+        - serviceAccountToken:
+            expirationSeconds: 3607
+            path: token
+        - configMap:
+            items:
+            - key: ca.crt
+              path: ca.crt
+            name: kube-root-ca.crt
+        - downwardAPI:
+            items:
+            - fieldRef:
+                apiVersion: v1
+                fieldPath: metadata.namespace
+              path: namespace
+  status:
+    conditions:
+    - lastProbeTime: null
+      lastTransitionTime: "2024-06-19T05:54:21Z"
+      status: "True"
+      type: PodReadyToStartContainers
+    - lastProbeTime: null
+      lastTransitionTime: "2024-06-19T05:53:58Z"
+      status: "True"
+      type: Initialized
+    - lastProbeTime: null
+      lastTransitionTime: "2024-06-19T05:54:59Z"
+      status: "True"
+      type: Ready
+    - lastProbeTime: null
+      lastTransitionTime: "2024-06-19T05:54:59Z"
+      status: "True"
+      type: ContainersReady
+    - lastProbeTime: null
+      lastTransitionTime: "2024-06-19T05:53:58Z"
+      status: "True"
+      type: PodScheduled
+    containerStatuses:
+    - containerID: containerd://a697c2cb9c3e4da92bdb108b431cb45b73eb2698367bb6278121120490469e42
+      image: docker.io/grafana/loki:3.0.0
+      imageID: docker.io/grafana/loki@sha256:757b5fadf816a1396f1fea598152947421fa49cb8b2db1ddd2a6e30fae003253
+      lastState: {}
+      name: loki
+      ready: true
+      restartCount: 0
+      started: true
+      state:
+        running:
+          startedAt: "2024-06-19T05:54:20Z"
+    - containerID: containerd://53ce72b5e1e8357e3024f15504c0fd3fe140eaa4739d5381592f4908bec764f8
+      image: docker.io/kiwigrid/k8s-sidecar:1.24.3
+      imageID: docker.io/kiwigrid/k8s-sidecar@sha256:5af76eebbba79edf4f7471bf1c3d5f2b40858114730c92d95eafe5716abe1fe8
+      lastState: {}
+      name: loki-sc-rules
+      ready: true
+      restartCount: 0
+      started: true
+      state:
+        running:
+          startedAt: "2024-06-19T05:54:20Z"
+    hostIP: 172.30.1.2
+    hostIPs:
+    - ip: 172.30.1.2
+    phase: Running
+    podIP: 192.168.0.13
+    podIPs:
+    - ip: 192.168.0.13
+    qosClass: BestEffort
+    startTime: "2024-06-19T05:53:58Z"
+- apiVersion: v1
+  kind: Pod
+  metadata:
+    annotations:
+      cni.projectcalico.org/containerID: c77e65abe23cd551deeb5470c2bf8a8b4b45e249a37defaa409ef3c53ed5825d
+      cni.projectcalico.org/podIP: 192.168.1.6/32
+      cni.projectcalico.org/podIPs: 192.168.1.6/32
+    creationTimestamp: "2024-06-19T05:53:34Z"
+    generateName: loki-canary-
+    labels:
+      app.kubernetes.io/component: canary
+      app.kubernetes.io/instance: loki
+      app.kubernetes.io/name: loki
+      controller-revision-hash: 877fb666
+      pod-template-generation: "1"
+    name: loki-canary-7l2l9
+    namespace: default
+    ownerReferences:
+    - apiVersion: apps/v1
+      blockOwnerDeletion: true
+      controller: true
+      kind: DaemonSet
+      name: loki-canary
+      uid: 50b6d670-bef3-4f90-91ae-2bfe8dfc87b3
+    resourceVersion: "2779"
+    uid: daef18d3-1ca0-425f-a3a3-cf44ab95f3dd
+  spec:
+    affinity:
+      nodeAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+          nodeSelectorTerms:
+          - matchFields:
+            - key: metadata.name
+              operator: In
+              values:
+              - node01
+    containers:
+    - args:
+      - -addr=loki-gateway.default.svc.cluster.local.:80
+      - -labelname=pod
+      - -labelvalue=$(POD_NAME)
+      - -user=self-monitoring
+      - -tenant-id=self-monitoring
+      - -pass=
+      - -push=true
+      env:
+      - name: POD_NAME
+        valueFrom:
+          fieldRef:
+            apiVersion: v1
+            fieldPath: metadata.name
+      image: docker.io/grafana/loki-canary:3.0.0
+      imagePullPolicy: IfNotPresent
+      name: loki-canary
+      ports:
+      - containerPort: 3500
+        name: http-metrics
+        protocol: TCP
+      readinessProbe:
+        failureThreshold: 3
+        httpGet:
+          path: /metrics
+          port: http-metrics
+          scheme: HTTP
+        initialDelaySeconds: 15
+        periodSeconds: 10
+        successThreshold: 1
+        timeoutSeconds: 1
+      resources: {}
+      securityContext:
+        allowPrivilegeEscalation: false
+        capabilities:
+          drop:
+          - ALL
+        readOnlyRootFilesystem: true
+      terminationMessagePath: /dev/termination-log
+      terminationMessagePolicy: File
+      volumeMounts:
+      - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+        name: kube-api-access-p2bxm
+        readOnly: true
+    dnsPolicy: ClusterFirst
+    enableServiceLinks: true
+    nodeName: node01
+    preemptionPolicy: PreemptLowerPriority
+    priority: 0
+    restartPolicy: Always
+    schedulerName: default-scheduler
+    securityContext:
+      fsGroup: 10001
+      runAsGroup: 10001
+      runAsNonRoot: true
+      runAsUser: 10001
+    serviceAccount: loki-canary
+    serviceAccountName: loki-canary
+    terminationGracePeriodSeconds: 30
+    tolerations:
+    - effect: NoExecute
+      key: node.kubernetes.io/not-ready
+      operator: Exists
+    - effect: NoExecute
+      key: node.kubernetes.io/unreachable
+      operator: Exists
+    - effect: NoSchedule
+      key: node.kubernetes.io/disk-pressure
+      operator: Exists
+    - effect: NoSchedule
+      key: node.kubernetes.io/memory-pressure
+      operator: Exists
+    - effect: NoSchedule
+      key: node.kubernetes.io/pid-pressure
+      operator: Exists
+    - effect: NoSchedule
+      key: node.kubernetes.io/unschedulable
+      operator: Exists
+    volumes:
+    - name: kube-api-access-p2bxm
+      projected:
+        defaultMode: 420
+        sources:
+        - serviceAccountToken:
+            expirationSeconds: 3607
+            path: token
+        - configMap:
+            items:
+            - key: ca.crt
+              path: ca.crt
+            name: kube-root-ca.crt
+        - downwardAPI:
+            items:
+            - fieldRef:
+                apiVersion: v1
+                fieldPath: metadata.namespace
+              path: namespace
+  status:
+    conditions:
+    - lastProbeTime: null
+      lastTransitionTime: "2024-06-19T05:53:48Z"
+      status: "True"
+      type: PodReadyToStartContainers
+    - lastProbeTime: null
+      lastTransitionTime: "2024-06-19T05:53:34Z"
+      status: "True"
+      type: Initialized
+    - lastProbeTime: null
+      lastTransitionTime: "2024-06-19T05:54:04Z"
+      status: "True"
+      type: Ready
+    - lastProbeTime: null
+      lastTransitionTime: "2024-06-19T05:54:04Z"
+      status: "True"
+      type: ContainersReady
+    - lastProbeTime: null
+      lastTransitionTime: "2024-06-19T05:53:34Z"
+      status: "True"
+      type: PodScheduled
+    containerStatuses:
+    - containerID: containerd://1f9ec82f59b62d08ba28561497e541f35a98de6e1ccc42a2280cd7cd8a32386b
+      image: docker.io/grafana/loki-canary:3.0.0
+      imageID: docker.io/grafana/loki-canary@sha256:28d7c00588aa43d24b84fce49a8c39e11eaadf5011c3460e64c81490fcfd963d
+      lastState: {}
+      name: loki-canary
+      ready: true
+      restartCount: 0
+      started: true
+      state:
+        running:
+          startedAt: "2024-06-19T05:53:48Z"
+    hostIP: 172.30.2.2
+    hostIPs:
+    - ip: 172.30.2.2
+    phase: Running
+    podIP: 192.168.1.6
+    podIPs:
+    - ip: 192.168.1.6
+    qosClass: BestEffort
+    startTime: "2024-06-19T05:53:34Z"
+- apiVersion: v1
+  kind: Pod
+  metadata:
+    annotations:
+      cni.projectcalico.org/containerID: 05925c5399f7411a40b9747276c0a53c3b6b4a4d433f1ce8572f7f95213c8421
+      cni.projectcalico.org/podIP: 192.168.0.4/32
+      cni.projectcalico.org/podIPs: 192.168.0.4/32
+    creationTimestamp: "2024-06-19T05:53:33Z"
+    generateName: loki-canary-
+    labels:
+      app.kubernetes.io/component: canary
+      app.kubernetes.io/instance: loki
+      app.kubernetes.io/name: loki
+      controller-revision-hash: 877fb666
+      pod-template-generation: "1"
+    name: loki-canary-tzhmq
+    namespace: default
+    ownerReferences:
+    - apiVersion: apps/v1
+      blockOwnerDeletion: true
+      controller: true
+      kind: DaemonSet
+      name: loki-canary
+      uid: 50b6d670-bef3-4f90-91ae-2bfe8dfc87b3
+    resourceVersion: "2784"
+    uid: c4bd1482-4494-48eb-ab46-bda12a935802
+  spec:
+    affinity:
+      nodeAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+          nodeSelectorTerms:
+          - matchFields:
+            - key: metadata.name
+              operator: In
+              values:
+              - controlplane
+    containers:
+    - args:
+      - -addr=loki-gateway.default.svc.cluster.local.:80
+      - -labelname=pod
+      - -labelvalue=$(POD_NAME)
+      - -user=self-monitoring
+      - -tenant-id=self-monitoring
+      - -pass=
+      - -push=true
+      env:
+      - name: POD_NAME
+        valueFrom:
+          fieldRef:
+            apiVersion: v1
+            fieldPath: metadata.name
+      image: docker.io/grafana/loki-canary:3.0.0
+      imagePullPolicy: IfNotPresent
+      name: loki-canary
+      ports:
+      - containerPort: 3500
+        name: http-metrics
+        protocol: TCP
+      readinessProbe:
+        failureThreshold: 3
+        httpGet:
+          path: /metrics
+          port: http-metrics
+          scheme: HTTP
+        initialDelaySeconds: 15
+        periodSeconds: 10
+        successThreshold: 1
+        timeoutSeconds: 1
+      resources: {}
+      securityContext:
+        allowPrivilegeEscalation: false
+        capabilities:
+          drop:
+          - ALL
+        readOnlyRootFilesystem: true
+      terminationMessagePath: /dev/termination-log
+      terminationMessagePolicy: File
+      volumeMounts:
+      - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+        name: kube-api-access-8b8zv
+        readOnly: true
+    dnsPolicy: ClusterFirst
+    enableServiceLinks: true
+    nodeName: controlplane
+    preemptionPolicy: PreemptLowerPriority
+    priority: 0
+    restartPolicy: Always
+    schedulerName: default-scheduler
+    securityContext:
+      fsGroup: 10001
+      runAsGroup: 10001
+      runAsNonRoot: true
+      runAsUser: 10001
+    serviceAccount: loki-canary
+    serviceAccountName: loki-canary
+    terminationGracePeriodSeconds: 30
+    tolerations:
+    - effect: NoExecute
+      key: node.kubernetes.io/not-ready
+      operator: Exists
+    - effect: NoExecute
+      key: node.kubernetes.io/unreachable
+      operator: Exists
+    - effect: NoSchedule
+      key: node.kubernetes.io/disk-pressure
+      operator: Exists
+    - effect: NoSchedule
+      key: node.kubernetes.io/memory-pressure
+      operator: Exists
+    - effect: NoSchedule
+      key: node.kubernetes.io/pid-pressure
+      operator: Exists
+    - effect: NoSchedule
+      key: node.kubernetes.io/unschedulable
+      operator: Exists
+    volumes:
+    - name: kube-api-access-8b8zv
+      projected:
+        defaultMode: 420
+        sources:
+        - serviceAccountToken:
+            expirationSeconds: 3607
+            path: token
+        - configMap:
+            items:
+            - key: ca.crt
+              path: ca.crt
+            name: kube-root-ca.crt
+        - downwardAPI:
+            items:
+            - fieldRef:
+                apiVersion: v1
+                fieldPath: metadata.namespace
+              path: namespace
+  status:
+    conditions:
+    - lastProbeTime: null
+      lastTransitionTime: "2024-06-19T05:53:41Z"
+      status: "True"
+      type: PodReadyToStartContainers
+    - lastProbeTime: null
+      lastTransitionTime: "2024-06-19T05:53:34Z"
+      status: "True"
+      type: Initialized
+    - lastProbeTime: null
+      lastTransitionTime: "2024-06-19T05:54:04Z"
+      status: "True"
+      type: Ready
+    - lastProbeTime: null
+      lastTransitionTime: "2024-06-19T05:54:04Z"
+      status: "True"
+      type: ContainersReady
+    - lastProbeTime: null
+      lastTransitionTime: "2024-06-19T05:53:34Z"
+      status: "True"
+      type: PodScheduled
+    containerStatuses:
+    - containerID: containerd://be8fcd08bfee72a46355a289ba93725a0fa460b666e275259b06747532593c10
+      image: docker.io/grafana/loki-canary:3.0.0
+      imageID: docker.io/grafana/loki-canary@sha256:28d7c00588aa43d24b84fce49a8c39e11eaadf5011c3460e64c81490fcfd963d
+      lastState: {}
+      name: loki-canary
+      ready: true
+      restartCount: 0
+      started: true
+      state:
+        running:
+          startedAt: "2024-06-19T05:53:40Z"
+    hostIP: 172.30.1.2
+    hostIPs:
+    - ip: 172.30.1.2
+    phase: Running
+    podIP: 192.168.0.4
+    podIPs:
+    - ip: 192.168.0.4
+    qosClass: BestEffort
+    startTime: "2024-06-19T05:53:34Z"
+- apiVersion: v1
+  kind: Pod
+  metadata:
+    creationTimestamp: "2024-06-19T05:53:34Z"
+    generateName: loki-chunks-cache-
+    labels:
+      app.kubernetes.io/component: memcached-chunks-cache
+      app.kubernetes.io/instance: loki
+      app.kubernetes.io/name: loki
+      apps.kubernetes.io/pod-index: "0"
+      controller-revision-hash: loki-chunks-cache-dbf664dd6
+      name: memcached-chunks-cache
+      statefulset.kubernetes.io/pod-name: loki-chunks-cache-0
+    name: loki-chunks-cache-0
+    namespace: default
+    ownerReferences:
+    - apiVersion: apps/v1
+      blockOwnerDeletion: true
+      controller: true
+      kind: StatefulSet
+      name: loki-chunks-cache
+      uid: d338fe72-dd50-4149-9459-5d58a270b038
+    resourceVersion: "2420"
+    uid: 85718d91-b5b8-41c1-958f-0efd92e41a5f
+  spec:
+    affinity: {}
+    containers:
+    - args:
+      - -m 8192
+      - --extended=modern,track_sizes
+      - -I 5m
+      - -c 16384
+      - -v
+      - -u 11211
+      image: memcached:1.6.23-alpine
+      imagePullPolicy: IfNotPresent
+      name: memcached
+      ports:
+      - containerPort: 11211
+        name: client
+        protocol: TCP
+      resources:
+        limits:
+          memory: 9830Mi
+        requests:
+          cpu: 500m
+          memory: 9830Mi
+      securityContext:
+        allowPrivilegeEscalation: false
+        capabilities:
+          drop:
+          - ALL
+        readOnlyRootFilesystem: true
+      terminationMessagePath: /dev/termination-log
+      terminationMessagePolicy: File
+      volumeMounts:
+      - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+        name: kube-api-access-2v4jr
+        readOnly: true
+    - args:
+      - --memcached.address=localhost:11211
+      - --web.listen-address=0.0.0.0:9150
+      image: prom/memcached-exporter:v0.14.2
+      imagePullPolicy: IfNotPresent
+      name: exporter
+      ports:
+      - containerPort: 9150
+        name: http-metrics
+        protocol: TCP
+      resources: {}
+      securityContext:
+        allowPrivilegeEscalation: false
+        capabilities:
+          drop:
+          - ALL
+        readOnlyRootFilesystem: true
+      terminationMessagePath: /dev/termination-log
+      terminationMessagePolicy: File
+      volumeMounts:
+      - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+        name: kube-api-access-2v4jr
+        readOnly: true
+    dnsPolicy: ClusterFirst
+    enableServiceLinks: true
+    hostname: loki-chunks-cache-0
+    preemptionPolicy: PreemptLowerPriority
+    priority: 0
+    restartPolicy: Always
+    schedulerName: default-scheduler
+    securityContext: {}
+    serviceAccount: loki
+    serviceAccountName: loki
+    subdomain: loki-chunks-cache
+    terminationGracePeriodSeconds: 60
+    tolerations:
+    - effect: NoExecute
+      key: node.kubernetes.io/not-ready
+      operator: Exists
+      tolerationSeconds: 300
+    - effect: NoExecute
+      key: node.kubernetes.io/unreachable
+      operator: Exists
+      tolerationSeconds: 300
+    volumes:
+    - name: kube-api-access-2v4jr
+      projected:
+        defaultMode: 420
+        sources:
+        - serviceAccountToken:
+            expirationSeconds: 3607
+            path: token
+        - configMap:
+            items:
+            - key: ca.crt
+              path: ca.crt
+            name: kube-root-ca.crt
+        - downwardAPI:
+            items:
+            - fieldRef:
+                apiVersion: v1
+                fieldPath: metadata.namespace
+              path: namespace
+  status:
+    conditions:
+    - lastProbeTime: null
+      lastTransitionTime: "2024-06-19T05:53:34Z"
+      message: '0/2 nodes are available: 1 Insufficient cpu, 2 Insufficient memory.
+        preemption: 0/2 nodes are available: 2 No preemption victims found for incoming
+        pod.'
+      reason: Unschedulable
+      status: "False"
+      type: PodScheduled
+    phase: Pending
+    qosClass: Burstable
+- apiVersion: v1
+  kind: Pod
+  metadata:
+    annotations:
+      checksum/config: d9356614f4808042352864a89abc47762fa5abd91ab8d6455ae39ed8f40fd3c7
+      cni.projectcalico.org/containerID: 7ddb58aea0ae16704c68a45b6550339f913e8677b393b29942927d4e797762ef
+      cni.projectcalico.org/podIP: 192.168.1.4/32
+      cni.projectcalico.org/podIPs: 192.168.1.4/32
+    creationTimestamp: "2024-06-19T05:53:33Z"
+    generateName: loki-gateway-6cb4677947-
+    labels:
+      app.kubernetes.io/component: gateway
+      app.kubernetes.io/instance: loki
+      app.kubernetes.io/name: loki
+      pod-template-hash: 6cb4677947
+    name: loki-gateway-6cb4677947-rprwx
+    namespace: default
+    ownerReferences:
+    - apiVersion: apps/v1
+      blockOwnerDeletion: true
+      controller: true
+      kind: ReplicaSet
+      name: loki-gateway-6cb4677947
+      uid: 9533c220-ac6a-42da-937a-0da37153ce9d
+    resourceVersion: "2775"
+    uid: 32cb5106-e04b-41c7-b0d7-eb02f9fa8ae4
+  spec:
+    affinity:
+      podAntiAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchLabels:
+              app.kubernetes.io/component: gateway
+          topologyKey: kubernetes.io/hostname
+    containers:
+    - image: docker.io/nginxinc/nginx-unprivileged:1.24-alpine
+      imagePullPolicy: IfNotPresent
+      name: nginx
+      ports:
+      - containerPort: 8080
+        name: http-metrics
+        protocol: TCP
+      readinessProbe:
+        failureThreshold: 3
+        httpGet:
+          path: /
+          port: http-metrics
+          scheme: HTTP
+        initialDelaySeconds: 15
+        periodSeconds: 10
+        successThreshold: 1
+        timeoutSeconds: 1
+      resources: {}
+      securityContext:
+        allowPrivilegeEscalation: false
+        capabilities:
+          drop:
+          - ALL
+        readOnlyRootFilesystem: true
+      terminationMessagePath: /dev/termination-log
+      terminationMessagePolicy: File
+      volumeMounts:
+      - mountPath: /etc/nginx
+        name: config
+      - mountPath: /tmp
+        name: tmp
+      - mountPath: /docker-entrypoint.d
+        name: docker-entrypoint-d-override
+      - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+        name: kube-api-access-c9xl7
+        readOnly: true
+    dnsPolicy: ClusterFirst
+    enableServiceLinks: true
+    nodeName: node01
+    preemptionPolicy: PreemptLowerPriority
+    priority: 0
+    restartPolicy: Always
+    schedulerName: default-scheduler
+    securityContext:
+      fsGroup: 101
+      runAsGroup: 101
+      runAsNonRoot: true
+      runAsUser: 101
+    serviceAccount: loki
+    serviceAccountName: loki
+    terminationGracePeriodSeconds: 30
+    tolerations:
+    - effect: NoExecute
+      key: node.kubernetes.io/not-ready
+      operator: Exists
+      tolerationSeconds: 300
+    - effect: NoExecute
+      key: node.kubernetes.io/unreachable
+      operator: Exists
+      tolerationSeconds: 300
+    volumes:
+    - configMap:
+        defaultMode: 420
+        name: loki-gateway
+      name: config
+    - emptyDir: {}
+      name: tmp
+    - emptyDir: {}
+      name: docker-entrypoint-d-override
+    - name: kube-api-access-c9xl7
+      projected:
+        defaultMode: 420
+        sources:
+        - serviceAccountToken:
+            expirationSeconds: 3607
+            path: token
+        - configMap:
+            items:
+            - key: ca.crt
+              path: ca.crt
+            name: kube-root-ca.crt
+        - downwardAPI:
+            items:
+            - fieldRef:
+                apiVersion: v1
+                fieldPath: metadata.namespace
+              path: namespace
+  status:
+    conditions:
+    - lastProbeTime: null
+      lastTransitionTime: "2024-06-19T05:53:41Z"
+      status: "True"
+      type: PodReadyToStartContainers
+    - lastProbeTime: null
+      lastTransitionTime: "2024-06-19T05:53:34Z"
+      status: "True"
+      type: Initialized
+    - lastProbeTime: null
+      lastTransitionTime: "2024-06-19T05:54:04Z"
+      status: "True"
+      type: Ready
+    - lastProbeTime: null
+      lastTransitionTime: "2024-06-19T05:54:04Z"
+      status: "True"
+      type: ContainersReady
+    - lastProbeTime: null
+      lastTransitionTime: "2024-06-19T05:53:34Z"
+      status: "True"
+      type: PodScheduled
+    containerStatuses:
+    - containerID: containerd://2b9f3f1a164933551933c798073f0d22c71de9a89d0d8eb530067c284f63a74f
+      image: docker.io/nginxinc/nginx-unprivileged:1.24-alpine
+      imageID: docker.io/nginxinc/nginx-unprivileged@sha256:be76a26e238d9242d1778d39fd0c5a0e4676408870ed56063d4062ba654b1e4e
+      lastState: {}
+      name: nginx
+      ready: true
+      restartCount: 0
+      started: true
+      state:
+        running:
+          startedAt: "2024-06-19T05:53:40Z"
+    hostIP: 172.30.2.2
+    hostIPs:
+    - ip: 172.30.2.2
+    phase: Running
+    podIP: 192.168.1.4
+    podIPs:
+    - ip: 192.168.1.4
+    qosClass: BestEffort
+    startTime: "2024-06-19T05:53:34Z"
+- apiVersion: v1
+  kind: Pod
+  metadata:
+    annotations:
+      checksum/config: 5ccf6de054849c650529eddba7e4c1d6dde7e79291d93059e1d1ca68067e5d5c
+      checksum/secrets: 06573763dc90ff6665c7dca1ba8ec15d7ff909a988372a719880d0918da249ab
+      cni.projectcalico.org/containerID: f52d51ad0500501dbe582b9fefb46538d0dfc01d1034592db35376debec39695
+      cni.projectcalico.org/podIP: 192.168.0.12/32
+      cni.projectcalico.org/podIPs: 192.168.0.12/32
+    creationTimestamp: "2024-06-19T05:53:34Z"
+    generateName: loki-minio-
+    labels:
+      app: minio
+      apps.kubernetes.io/pod-index: "0"
+      controller-revision-hash: loki-minio-796bc746f4
+      release: loki
+      statefulset.kubernetes.io/pod-name: loki-minio-0
+    name: loki-minio-0
+    namespace: default
+    ownerReferences:
+    - apiVersion: apps/v1
+      blockOwnerDeletion: true
+      controller: true
+      kind: StatefulSet
+      name: loki-minio
+      uid: 160aff58-6f2a-44af-865c-32d698a41868
+    resourceVersion: "2825"
+    uid: cb85c55f-8188-40c3-82de-f9a1a6c6b3c8
+  spec:
+    containers:
+    - command:
+      - /bin/sh
+      - -ce
+      - /usr/bin/docker-entrypoint.sh minio server  http://loki-minio-{0...0}.loki-minio-svc.default.svc.cluster.local/export-{0...1}
+        -S /etc/minio/certs/ --address :9000 --console-address :9001
+      env:
+      - name: MINIO_ROOT_USER
+        valueFrom:
+          secretKeyRef:
+            key: rootUser
+            name: loki-minio
+      - name: MINIO_ROOT_PASSWORD
+        valueFrom:
+          secretKeyRef:
+            key: rootPassword
+            name: loki-minio
+      - name: MINIO_PROMETHEUS_AUTH_TYPE
+        value: public
+      image: quay.io/minio/minio:RELEASE.2022-09-17T00-09-45Z
+      imagePullPolicy: IfNotPresent
+      name: minio
+      ports:
+      - containerPort: 9000
+        name: http
+        protocol: TCP
+      - containerPort: 9001
+        name: http-console
+        protocol: TCP
+      resources:
+        requests:
+          cpu: 100m
+          memory: 128Mi
+      terminationMessagePath: /dev/termination-log
+      terminationMessagePolicy: File
+      volumeMounts:
+      - mountPath: /export-0
+        name: export-0
+      - mountPath: /export-1
+        name: export-1
+      - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+        name: kube-api-access-f8lbv
+        readOnly: true
+    dnsPolicy: ClusterFirst
+    enableServiceLinks: true
+    hostname: loki-minio-0
+    nodeName: controlplane
+    preemptionPolicy: PreemptLowerPriority
+    priority: 0
+    restartPolicy: Always
+    schedulerName: default-scheduler
+    securityContext:
+      fsGroup: 1000
+      fsGroupChangePolicy: OnRootMismatch
+      runAsGroup: 1000
+      runAsUser: 1000
+    serviceAccount: minio-sa
+    serviceAccountName: minio-sa
+    subdomain: loki-minio-svc
+    terminationGracePeriodSeconds: 30
+    tolerations:
+    - effect: NoExecute
+      key: node.kubernetes.io/not-ready
+      operator: Exists
+      tolerationSeconds: 300
+    - effect: NoExecute
+      key: node.kubernetes.io/unreachable
+      operator: Exists
+      tolerationSeconds: 300
+    volumes:
+    - name: export-0
+      persistentVolumeClaim:
+        claimName: export-0-loki-minio-0
+    - name: export-1
+      persistentVolumeClaim:
+        claimName: export-1-loki-minio-0
+    - name: minio-user
+      secret:
+        defaultMode: 420
+        secretName: loki-minio
+    - name: kube-api-access-f8lbv
+      projected:
+        defaultMode: 420
+        sources:
+        - serviceAccountToken:
+            expirationSeconds: 3607
+            path: token
+        - configMap:
+            items:
+            - key: ca.crt
+              path: ca.crt
+            name: kube-root-ca.crt
+        - downwardAPI:
+            items:
+            - fieldRef:
+                apiVersion: v1
+                fieldPath: metadata.namespace
+              path: namespace
+  status:
+    conditions:
+    - lastProbeTime: null
+      lastTransitionTime: "2024-06-19T05:54:15Z"
+      status: "True"
+      type: PodReadyToStartContainers
+    - lastProbeTime: null
+      lastTransitionTime: "2024-06-19T05:53:58Z"
+      status: "True"
+      type: Initialized
+    - lastProbeTime: null
+      lastTransitionTime: "2024-06-19T05:54:15Z"
+      status: "True"
+      type: Ready
+    - lastProbeTime: null
+      lastTransitionTime: "2024-06-19T05:54:15Z"
+      status: "True"
+      type: ContainersReady
+    - lastProbeTime: null
+      lastTransitionTime: "2024-06-19T05:53:58Z"
+      status: "True"
+      type: PodScheduled
+    containerStatuses:
+    - containerID: containerd://4869b6dfa0c4837d7da50009f91c4773e63a27e4d409b0aedc86bcec89e5dc90
+      image: quay.io/minio/minio:RELEASE.2022-09-17T00-09-45Z
+      imageID: quay.io/minio/minio@sha256:c3d20bc2ea08477248c15f932822f932b092b658c5692a9c9f4d88abcf556ed7
+      lastState: {}
+      name: minio
+      ready: true
+      restartCount: 0
+      started: true
+      state:
+        running:
+          startedAt: "2024-06-19T05:54:15Z"
+    hostIP: 172.30.1.2
+    hostIPs:
+    - ip: 172.30.1.2
+    phase: Running
+    podIP: 192.168.0.12
+    podIPs:
+    - ip: 192.168.0.12
+    qosClass: Burstable
+    startTime: "2024-06-19T05:53:58Z"
+- apiVersion: v1
+  kind: Pod
+  metadata:
+    annotations:
+      checksum/config: 62dcad17d9932a80434500de5e3f7436f2fd18340468da00fd85c5dbf77a95e9
+      cni.projectcalico.org/containerID: 82322f6cbfdf62fb1e101a77ba6245bc809c2baf5a372ea64fd902c3867485fd
+      cni.projectcalico.org/podIP: 192.168.0.6/32
+      cni.projectcalico.org/podIPs: 192.168.0.6/32
+    creationTimestamp: "2024-06-19T05:53:34Z"
+    generateName: loki-read-6f78c5964f-
+    labels:
+      app.kubernetes.io/component: read
+      app.kubernetes.io/instance: loki
+      app.kubernetes.io/name: loki
+      app.kubernetes.io/part-of: memberlist
+      pod-template-hash: 6f78c5964f
+    name: loki-read-6f78c5964f-4r26j
+    namespace: default
+    ownerReferences:
+    - apiVersion: apps/v1
+      blockOwnerDeletion: true
+      controller: true
+      kind: ReplicaSet
+      name: loki-read-6f78c5964f
+      uid: 5b98cbfe-48b7-4152-a6ee-63d6d109ad7e
+    resourceVersion: "3027"
+    uid: 28cc26dd-0778-49c5-9a38-e02e527375de
+  spec:
+    affinity:
+      podAntiAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchLabels:
+              app.kubernetes.io/component: read
+          topologyKey: kubernetes.io/hostname
+    automountServiceAccountToken: true
+    containers:
+    - args:
+      - -config.file=/etc/loki/config/config.yaml
+      - -target=read
+      - -legacy-read-mode=false
+      - -common.compactor-grpc-address=loki-backend.default.svc.cluster.local:9095
+      image: docker.io/grafana/loki:3.0.0
+      imagePullPolicy: IfNotPresent
+      name: loki
+      ports:
+      - containerPort: 3100
+        name: http-metrics
+        protocol: TCP
+      - containerPort: 9095
+        name: grpc
+        protocol: TCP
+      - containerPort: 7946
+        name: http-memberlist
+        protocol: TCP
+      readinessProbe:
+        failureThreshold: 3
+        httpGet:
+          path: /ready
+          port: http-metrics
+          scheme: HTTP
+        initialDelaySeconds: 30
+        periodSeconds: 10
+        successThreshold: 1
+        timeoutSeconds: 1
+      resources: {}
+      securityContext:
+        allowPrivilegeEscalation: false
+        capabilities:
+          drop:
+          - ALL
+        readOnlyRootFilesystem: true
+      terminationMessagePath: /dev/termination-log
+      terminationMessagePolicy: File
+      volumeMounts:
+      - mountPath: /etc/loki/config
+        name: config
+      - mountPath: /etc/loki/runtime-config
+        name: runtime-config
+      - mountPath: /tmp
+        name: tmp
+      - mountPath: /var/loki
+        name: data
+      - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+        name: kube-api-access-bllbk
+        readOnly: true
+    dnsPolicy: ClusterFirst
+    enableServiceLinks: true
+    nodeName: controlplane
+    preemptionPolicy: PreemptLowerPriority
+    priority: 0
+    restartPolicy: Always
+    schedulerName: default-scheduler
+    securityContext:
+      fsGroup: 10001
+      runAsGroup: 10001
+      runAsNonRoot: true
+      runAsUser: 10001
+    serviceAccount: loki
+    serviceAccountName: loki
+    terminationGracePeriodSeconds: 30
+    tolerations:
+    - effect: NoExecute
+      key: node.kubernetes.io/not-ready
+      operator: Exists
+      tolerationSeconds: 300
+    - effect: NoExecute
+      key: node.kubernetes.io/unreachable
+      operator: Exists
+      tolerationSeconds: 300
+    volumes:
+    - emptyDir: {}
+      name: tmp
+    - emptyDir: {}
+      name: data
+    - configMap:
+        defaultMode: 420
+        items:
+        - key: config.yaml
+          path: config.yaml
+        name: loki
+      name: config
+    - configMap:
+        defaultMode: 420
+        name: loki-runtime
+      name: runtime-config
+    - name: kube-api-access-bllbk
+      projected:
+        defaultMode: 420
+        sources:
+        - serviceAccountToken:
+            expirationSeconds: 3607
+            path: token
+        - configMap:
+            items:
+            - key: ca.crt
+              path: ca.crt
+            name: kube-root-ca.crt
+        - downwardAPI:
+            items:
+            - fieldRef:
+                apiVersion: v1
+                fieldPath: metadata.namespace
+              path: namespace
+  status:
+    conditions:
+    - lastProbeTime: null
+      lastTransitionTime: "2024-06-19T05:53:48Z"
+      status: "True"
+      type: PodReadyToStartContainers
+    - lastProbeTime: null
+      lastTransitionTime: "2024-06-19T05:53:34Z"
+      status: "True"
+      type: Initialized
+    - lastProbeTime: null
+      lastTransitionTime: "2024-06-19T05:55:14Z"
+      status: "True"
+      type: Ready
+    - lastProbeTime: null
+      lastTransitionTime: "2024-06-19T05:55:14Z"
+      status: "True"
+      type: ContainersReady
+    - lastProbeTime: null
+      lastTransitionTime: "2024-06-19T05:53:34Z"
+      status: "True"
+      type: PodScheduled
+    containerStatuses:
+    - containerID: containerd://c04b0cfe28f529da74fab58f9486cc01d5ebb76d194dde663ca7e273327cb69d
+      image: docker.io/grafana/loki:3.0.0
+      imageID: docker.io/grafana/loki@sha256:757b5fadf816a1396f1fea598152947421fa49cb8b2db1ddd2a6e30fae003253
+      lastState: {}
+      name: loki
+      ready: true
+      restartCount: 0
+      started: true
+      state:
+        running:
+          startedAt: "2024-06-19T05:53:48Z"
+    hostIP: 172.30.1.2
+    hostIPs:
+    - ip: 172.30.1.2
+    phase: Running
+    podIP: 192.168.0.6
+    podIPs:
+    - ip: 192.168.0.6
+    qosClass: BestEffort
+    startTime: "2024-06-19T05:53:34Z"
+- apiVersion: v1
+  kind: Pod
+  metadata:
+    annotations:
+      checksum/config: 62dcad17d9932a80434500de5e3f7436f2fd18340468da00fd85c5dbf77a95e9
+      cni.projectcalico.org/containerID: e4e8170ff47cb82f5d14721ba7a68fb26617a9871e12c39794b553a4e0daadba
+      cni.projectcalico.org/podIP: 192.168.1.5/32
+      cni.projectcalico.org/podIPs: 192.168.1.5/32
+    creationTimestamp: "2024-06-19T05:53:33Z"
+    generateName: loki-read-6f78c5964f-
+    labels:
+      app.kubernetes.io/component: read
+      app.kubernetes.io/instance: loki
+      app.kubernetes.io/name: loki
+      app.kubernetes.io/part-of: memberlist
+      pod-template-hash: 6f78c5964f
+    name: loki-read-6f78c5964f-fwrq5
+    namespace: default
+    ownerReferences:
+    - apiVersion: apps/v1
+      blockOwnerDeletion: true
+      controller: true
+      kind: ReplicaSet
+      name: loki-read-6f78c5964f
+      uid: 5b98cbfe-48b7-4152-a6ee-63d6d109ad7e
+    resourceVersion: "3081"
+    uid: bf938afd-ccc0-4862-aaa9-a2d76052d570
+  spec:
+    affinity:
+      podAntiAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchLabels:
+              app.kubernetes.io/component: read
+          topologyKey: kubernetes.io/hostname
+    automountServiceAccountToken: true
+    containers:
+    - args:
+      - -config.file=/etc/loki/config/config.yaml
+      - -target=read
+      - -legacy-read-mode=false
+      - -common.compactor-grpc-address=loki-backend.default.svc.cluster.local:9095
+      image: docker.io/grafana/loki:3.0.0
+      imagePullPolicy: IfNotPresent
+      name: loki
+      ports:
+      - containerPort: 3100
+        name: http-metrics
+        protocol: TCP
+      - containerPort: 9095
+        name: grpc
+        protocol: TCP
+      - containerPort: 7946
+        name: http-memberlist
+        protocol: TCP
+      readinessProbe:
+        failureThreshold: 3
+        httpGet:
+          path: /ready
+          port: http-metrics
+          scheme: HTTP
+        initialDelaySeconds: 30
+        periodSeconds: 10
+        successThreshold: 1
+        timeoutSeconds: 1
+      resources: {}
+      securityContext:
+        allowPrivilegeEscalation: false
+        capabilities:
+          drop:
+          - ALL
+        readOnlyRootFilesystem: true
+      terminationMessagePath: /dev/termination-log
+      terminationMessagePolicy: File
+      volumeMounts:
+      - mountPath: /etc/loki/config
+        name: config
+      - mountPath: /etc/loki/runtime-config
+        name: runtime-config
+      - mountPath: /tmp
+        name: tmp
+      - mountPath: /var/loki
+        name: data
+      - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+        name: kube-api-access-pxwwk
+        readOnly: true
+    dnsPolicy: ClusterFirst
+    enableServiceLinks: true
+    nodeName: node01
+    preemptionPolicy: PreemptLowerPriority
+    priority: 0
+    restartPolicy: Always
+    schedulerName: default-scheduler
+    securityContext:
+      fsGroup: 10001
+      runAsGroup: 10001
+      runAsNonRoot: true
+      runAsUser: 10001
+    serviceAccount: loki
+    serviceAccountName: loki
+    terminationGracePeriodSeconds: 30
+    tolerations:
+    - effect: NoExecute
+      key: node.kubernetes.io/not-ready
+      operator: Exists
+      tolerationSeconds: 300
+    - effect: NoExecute
+      key: node.kubernetes.io/unreachable
+      operator: Exists
+      tolerationSeconds: 300
+    volumes:
+    - emptyDir: {}
+      name: tmp
+    - emptyDir: {}
+      name: data
+    - configMap:
+        defaultMode: 420
+        items:
+        - key: config.yaml
+          path: config.yaml
+        name: loki
+      name: config
+    - configMap:
+        defaultMode: 420
+        name: loki-runtime
+      name: runtime-config
+    - name: kube-api-access-pxwwk
+      projected:
+        defaultMode: 420
+        sources:
+        - serviceAccountToken:
+            expirationSeconds: 3607
+            path: token
+        - configMap:
+            items:
+            - key: ca.crt
+              path: ca.crt
+            name: kube-root-ca.crt
+        - downwardAPI:
+            items:
+            - fieldRef:
+                apiVersion: v1
+                fieldPath: metadata.namespace
+              path: namespace
+  status:
+    conditions:
+    - lastProbeTime: null
+      lastTransitionTime: "2024-06-19T05:53:45Z"
+      status: "True"
+      type: PodReadyToStartContainers
+    - lastProbeTime: null
+      lastTransitionTime: "2024-06-19T05:53:34Z"
+      status: "True"
+      type: Initialized
+    - lastProbeTime: null
+      lastTransitionTime: "2024-06-19T05:55:44Z"
+      status: "True"
+      type: Ready
+    - lastProbeTime: null
+      lastTransitionTime: "2024-06-19T05:55:44Z"
+      status: "True"
+      type: ContainersReady
+    - lastProbeTime: null
+      lastTransitionTime: "2024-06-19T05:53:34Z"
+      status: "True"
+      type: PodScheduled
+    containerStatuses:
+    - containerID: containerd://1d4131aab63407bfbb3c2a682d3fc54efdc1760938f4252b31fc982d27905cd0
+      image: docker.io/grafana/loki:3.0.0
+      imageID: docker.io/grafana/loki@sha256:757b5fadf816a1396f1fea598152947421fa49cb8b2db1ddd2a6e30fae003253
+      lastState: {}
+      name: loki
+      ready: true
+      restartCount: 0
+      started: true
+      state:
+        running:
+          startedAt: "2024-06-19T05:53:45Z"
+    hostIP: 172.30.2.2
+    hostIPs:
+    - ip: 172.30.2.2
+    phase: Running
+    podIP: 192.168.1.5
+    podIPs:
+    - ip: 192.168.1.5
+    qosClass: BestEffort
+    startTime: "2024-06-19T05:53:34Z"
+- apiVersion: v1
+  kind: Pod
+  metadata:
+    annotations:
+      cni.projectcalico.org/containerID: dd7cbea8cd3211dd88941edea0765153a2cfcb3e9fa6120f6a5c97d5efde2196
+      cni.projectcalico.org/podIP: 192.168.0.5/32
+      cni.projectcalico.org/podIPs: 192.168.0.5/32
+    creationTimestamp: "2024-06-19T05:53:34Z"
+    generateName: loki-results-cache-
+    labels:
+      app.kubernetes.io/component: memcached-results-cache
+      app.kubernetes.io/instance: loki
+      app.kubernetes.io/name: loki
+      apps.kubernetes.io/pod-index: "0"
+      controller-revision-hash: loki-results-cache-7d9bd9db9c
+      name: memcached-results-cache
+      statefulset.kubernetes.io/pod-name: loki-results-cache-0
+    name: loki-results-cache-0
+    namespace: default
+    ownerReferences:
+    - apiVersion: apps/v1
+      blockOwnerDeletion: true
+      controller: true
+      kind: StatefulSet
+      name: loki-results-cache
+      uid: f73ad5d9-f567-4399-be5a-b42e378162fe
+    resourceVersion: "2671"
+    uid: 4cf09817-17da-42b6-bf9b-8cb911992bcb
+  spec:
+    affinity: {}
+    containers:
+    - args:
+      - -m 1024
+      - --extended=modern,track_sizes
+      - -I 5m
+      - -c 16384
+      - -v
+      - -u 11211
+      image: memcached:1.6.23-alpine
+      imagePullPolicy: IfNotPresent
+      name: memcached
+      ports:
+      - containerPort: 11211
+        name: client
+        protocol: TCP
+      resources:
+        limits:
+          memory: 1229Mi
+        requests:
+          cpu: 500m
+          memory: 1229Mi
+      securityContext:
+        allowPrivilegeEscalation: false
+        capabilities:
+          drop:
+          - ALL
+        readOnlyRootFilesystem: true
+      terminationMessagePath: /dev/termination-log
+      terminationMessagePolicy: File
+      volumeMounts:
+      - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+        name: kube-api-access-kldgq
+        readOnly: true
+    - args:
+      - --memcached.address=localhost:11211
+      - --web.listen-address=0.0.0.0:9150
+      image: prom/memcached-exporter:v0.14.2
+      imagePullPolicy: IfNotPresent
+      name: exporter
+      ports:
+      - containerPort: 9150
+        name: http-metrics
+        protocol: TCP
+      resources: {}
+      securityContext:
+        allowPrivilegeEscalation: false
+        capabilities:
+          drop:
+          - ALL
+        readOnlyRootFilesystem: true
+      terminationMessagePath: /dev/termination-log
+      terminationMessagePolicy: File
+      volumeMounts:
+      - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+        name: kube-api-access-kldgq
+        readOnly: true
+    dnsPolicy: ClusterFirst
+    enableServiceLinks: true
+    hostname: loki-results-cache-0
+    nodeName: controlplane
+    preemptionPolicy: PreemptLowerPriority
+    priority: 0
+    restartPolicy: Always
+    schedulerName: default-scheduler
+    securityContext: {}
+    serviceAccount: loki
+    serviceAccountName: loki
+    subdomain: loki-results-cache
+    terminationGracePeriodSeconds: 60
+    tolerations:
+    - effect: NoExecute
+      key: node.kubernetes.io/not-ready
+      operator: Exists
+      tolerationSeconds: 300
+    - effect: NoExecute
+      key: node.kubernetes.io/unreachable
+      operator: Exists
+      tolerationSeconds: 300
+    volumes:
+    - name: kube-api-access-kldgq
+      projected:
+        defaultMode: 420
+        sources:
+        - serviceAccountToken:
+            expirationSeconds: 3607
+            path: token
+        - configMap:
+            items:
+            - key: ca.crt
+              path: ca.crt
+            name: kube-root-ca.crt
+        - downwardAPI:
+            items:
+            - fieldRef:
+                apiVersion: v1
+                fieldPath: metadata.namespace
+              path: namespace
+  status:
+    conditions:
+    - lastProbeTime: null
+      lastTransitionTime: "2024-06-19T05:53:56Z"
+      status: "True"
+      type: PodReadyToStartContainers
+    - lastProbeTime: null
+      lastTransitionTime: "2024-06-19T05:53:34Z"
+      status: "True"
+      type: Initialized
+    - lastProbeTime: null
+      lastTransitionTime: "2024-06-19T05:53:56Z"
+      status: "True"
+      type: Ready
+    - lastProbeTime: null
+      lastTransitionTime: "2024-06-19T05:53:56Z"
+      status: "True"
+      type: ContainersReady
+    - lastProbeTime: null
+      lastTransitionTime: "2024-06-19T05:53:34Z"
+      status: "True"
+      type: PodScheduled
+    containerStatuses:
+    - containerID: containerd://f25881fe057e0646f17a248db85b28c4925b08603c7f879208cf67900bef9c6a
+      image: docker.io/prom/memcached-exporter:v0.14.2
+      imageID: docker.io/prom/memcached-exporter@sha256:d8a61419b8416c0090f40b6eb90eb152a4dd1680e23faba5513c3ac84b478b8f
+      lastState: {}
+      name: exporter
+      ready: true
+      restartCount: 0
+      started: true
+      state:
+        running:
+          startedAt: "2024-06-19T05:53:56Z"
+    - containerID: containerd://4c4fdc8c947268554fb79f993b5ea94c189559d81d2b89c21514296400bf340f
+      image: docker.io/library/memcached:1.6.23-alpine
+      imageID: docker.io/library/memcached@sha256:41d19476c100c4b22a07c635e68d4e94e332eadd3afbd8f6bc61cd754d9b5d06
+      lastState: {}
+      name: memcached
+      ready: true
+      restartCount: 0
+      started: true
+      state:
+        running:
+          startedAt: "2024-06-19T05:53:43Z"
+    hostIP: 172.30.1.2
+    hostIPs:
+    - ip: 172.30.1.2
+    phase: Running
+    podIP: 192.168.0.5
+    podIPs:
+    - ip: 192.168.0.5
+    qosClass: Burstable
+    startTime: "2024-06-19T05:53:34Z"
+- apiVersion: v1
+  kind: Pod
+  metadata:
+    annotations:
+      checksum/config: 62dcad17d9932a80434500de5e3f7436f2fd18340468da00fd85c5dbf77a95e9
+      cni.projectcalico.org/containerID: 91e8edc7bec8b0db378fb765f59566b73433ad79615fa761bc03ac2b58d1a2c0
+      cni.projectcalico.org/podIP: 192.168.1.10/32
+      cni.projectcalico.org/podIPs: 192.168.1.10/32
+    creationTimestamp: "2024-06-19T05:53:34Z"
+    generateName: loki-write-
+    labels:
+      app.kubernetes.io/component: write
+      app.kubernetes.io/instance: loki
+      app.kubernetes.io/name: loki
+      app.kubernetes.io/part-of: memberlist
+      apps.kubernetes.io/pod-index: "0"
+      controller-revision-hash: loki-write-bbddc67df
+      statefulset.kubernetes.io/pod-name: loki-write-0
+    name: loki-write-0
+    namespace: default
+    ownerReferences:
+    - apiVersion: apps/v1
+      blockOwnerDeletion: true
+      controller: true
+      kind: StatefulSet
+      name: loki-write
+      uid: eaf1020f-d72e-40ac-86eb-8d171ed27163
+    resourceVersion: "2998"
+    uid: 76f152e2-045c-40a9-889a-7c0e5a3bc4c0
+  spec:
+    affinity:
+      podAntiAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchLabels:
+              app.kubernetes.io/component: write
+          topologyKey: kubernetes.io/hostname
+    automountServiceAccountToken: true
+    containers:
+    - args:
+      - -config.file=/etc/loki/config/config.yaml
+      - -target=write
+      image: docker.io/grafana/loki:3.0.0
+      imagePullPolicy: IfNotPresent
+      name: loki
+      ports:
+      - containerPort: 3100
+        name: http-metrics
+        protocol: TCP
+      - containerPort: 9095
+        name: grpc
+        protocol: TCP
+      - containerPort: 7946
+        name: http-memberlist
+        protocol: TCP
+      readinessProbe:
+        failureThreshold: 3
+        httpGet:
+          path: /ready
+          port: http-metrics
+          scheme: HTTP
+        initialDelaySeconds: 30
+        periodSeconds: 10
+        successThreshold: 1
+        timeoutSeconds: 1
+      resources: {}
+      securityContext:
+        allowPrivilegeEscalation: false
+        capabilities:
+          drop:
+          - ALL
+        readOnlyRootFilesystem: true
+      terminationMessagePath: /dev/termination-log
+      terminationMessagePolicy: File
+      volumeMounts:
+      - mountPath: /etc/loki/config
+        name: config
+      - mountPath: /etc/loki/runtime-config
+        name: runtime-config
+      - mountPath: /var/loki
+        name: data
+      - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+        name: kube-api-access-mgjpf
+        readOnly: true
+    dnsPolicy: ClusterFirst
+    enableServiceLinks: true
+    hostname: loki-write-0
+    nodeName: node01
+    preemptionPolicy: PreemptLowerPriority
+    priority: 0
+    restartPolicy: Always
+    schedulerName: default-scheduler
+    securityContext:
+      fsGroup: 10001
+      runAsGroup: 10001
+      runAsNonRoot: true
+      runAsUser: 10001
+    serviceAccount: loki
+    serviceAccountName: loki
+    subdomain: loki-write-headless
+    terminationGracePeriodSeconds: 300
+    tolerations:
+    - effect: NoExecute
+      key: node.kubernetes.io/not-ready
+      operator: Exists
+      tolerationSeconds: 300
+    - effect: NoExecute
+      key: node.kubernetes.io/unreachable
+      operator: Exists
+      tolerationSeconds: 300
+    volumes:
+    - name: data
+      persistentVolumeClaim:
+        claimName: data-loki-write-0
+    - configMap:
+        defaultMode: 420
+        items:
+        - key: config.yaml
+          path: config.yaml
+        name: loki
+      name: config
+    - configMap:
+        defaultMode: 420
+        name: loki-runtime
+      name: runtime-config
+    - name: kube-api-access-mgjpf
+      projected:
+        defaultMode: 420
+        sources:
+        - serviceAccountToken:
+            expirationSeconds: 3607
+            path: token
+        - configMap:
+            items:
+            - key: ca.crt
+              path: ca.crt
+            name: kube-root-ca.crt
+        - downwardAPI:
+            items:
+            - fieldRef:
+                apiVersion: v1
+                fieldPath: metadata.namespace
+              path: namespace
+  status:
+    conditions:
+    - lastProbeTime: null
+      lastTransitionTime: "2024-06-19T05:54:03Z"
+      status: "True"
+      type: PodReadyToStartContainers
+    - lastProbeTime: null
+      lastTransitionTime: "2024-06-19T05:54:02Z"
+      status: "True"
+      type: Initialized
+    - lastProbeTime: null
+      lastTransitionTime: "2024-06-19T05:55:02Z"
+      status: "True"
+      type: Ready
+    - lastProbeTime: null
+      lastTransitionTime: "2024-06-19T05:55:02Z"
+      status: "True"
+      type: ContainersReady
+    - lastProbeTime: null
+      lastTransitionTime: "2024-06-19T05:54:02Z"
+      status: "True"
+      type: PodScheduled
+    containerStatuses:
+    - containerID: containerd://156e384047e9ca5a8cc4594f3a516f929324a4b0f25d5056f2cf8e77cb861022
+      image: docker.io/grafana/loki:3.0.0
+      imageID: docker.io/grafana/loki@sha256:757b5fadf816a1396f1fea598152947421fa49cb8b2db1ddd2a6e30fae003253
+      lastState: {}
+      name: loki
+      ready: true
+      restartCount: 0
+      started: true
+      state:
+        running:
+          startedAt: "2024-06-19T05:54:03Z"
+    hostIP: 172.30.2.2
+    hostIPs:
+    - ip: 172.30.2.2
+    phase: Running
+    podIP: 192.168.1.10
+    podIPs:
+    - ip: 192.168.1.10
+    qosClass: BestEffort
+    startTime: "2024-06-19T05:54:02Z"
+- apiVersion: v1
+  kind: Pod
+  metadata:
+    annotations:
+      checksum/config: 62dcad17d9932a80434500de5e3f7436f2fd18340468da00fd85c5dbf77a95e9
+      cni.projectcalico.org/containerID: 6974c04619c59ab5c4bea6b2113349dca9f1155362e3b8ae082b15067edb2673
+      cni.projectcalico.org/podIP: 192.168.0.11/32
+      cni.projectcalico.org/podIPs: 192.168.0.11/32
+    creationTimestamp: "2024-06-19T05:53:34Z"
+    generateName: loki-write-
+    labels:
+      app.kubernetes.io/component: write
+      app.kubernetes.io/instance: loki
+      app.kubernetes.io/name: loki
+      app.kubernetes.io/part-of: memberlist
+      apps.kubernetes.io/pod-index: "1"
+      controller-revision-hash: loki-write-bbddc67df
+      statefulset.kubernetes.io/pod-name: loki-write-1
+    name: loki-write-1
+    namespace: default
+    ownerReferences:
+    - apiVersion: apps/v1
+      blockOwnerDeletion: true
+      controller: true
+      kind: StatefulSet
+      name: loki-write
+      uid: eaf1020f-d72e-40ac-86eb-8d171ed27163
+    resourceVersion: "2967"
+    uid: 4a451007-af7d-44ab-86bd-a2632889fa8d
+  spec:
+    affinity:
+      podAntiAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchLabels:
+              app.kubernetes.io/component: write
+          topologyKey: kubernetes.io/hostname
+    automountServiceAccountToken: true
+    containers:
+    - args:
+      - -config.file=/etc/loki/config/config.yaml
+      - -target=write
+      image: docker.io/grafana/loki:3.0.0
+      imagePullPolicy: IfNotPresent
+      name: loki
+      ports:
+      - containerPort: 3100
+        name: http-metrics
+        protocol: TCP
+      - containerPort: 9095
+        name: grpc
+        protocol: TCP
+      - containerPort: 7946
+        name: http-memberlist
+        protocol: TCP
+      readinessProbe:
+        failureThreshold: 3
+        httpGet:
+          path: /ready
+          port: http-metrics
+          scheme: HTTP
+        initialDelaySeconds: 30
+        periodSeconds: 10
+        successThreshold: 1
+        timeoutSeconds: 1
+      resources: {}
+      securityContext:
+        allowPrivilegeEscalation: false
+        capabilities:
+          drop:
+          - ALL
+        readOnlyRootFilesystem: true
+      terminationMessagePath: /dev/termination-log
+      terminationMessagePolicy: File
+      volumeMounts:
+      - mountPath: /etc/loki/config
+        name: config
+      - mountPath: /etc/loki/runtime-config
+        name: runtime-config
+      - mountPath: /var/loki
+        name: data
+      - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+        name: kube-api-access-58xrf
+        readOnly: true
+    dnsPolicy: ClusterFirst
+    enableServiceLinks: true
+    hostname: loki-write-1
+    nodeName: controlplane
+    preemptionPolicy: PreemptLowerPriority
+    priority: 0
+    restartPolicy: Always
+    schedulerName: default-scheduler
+    securityContext:
+      fsGroup: 10001
+      runAsGroup: 10001
+      runAsNonRoot: true
+      runAsUser: 10001
+    serviceAccount: loki
+    serviceAccountName: loki
+    subdomain: loki-write-headless
+    terminationGracePeriodSeconds: 300
+    tolerations:
+    - effect: NoExecute
+      key: node.kubernetes.io/not-ready
+      operator: Exists
+      tolerationSeconds: 300
+    - effect: NoExecute
+      key: node.kubernetes.io/unreachable
+      operator: Exists
+      tolerationSeconds: 300
+    volumes:
+    - name: data
+      persistentVolumeClaim:
+        claimName: data-loki-write-1
+    - configMap:
+        defaultMode: 420
+        items:
+        - key: config.yaml
+          path: config.yaml
+        name: loki
+      name: config
+    - configMap:
+        defaultMode: 420
+        name: loki-runtime
+      name: runtime-config
+    - name: kube-api-access-58xrf
+      projected:
+        defaultMode: 420
+        sources:
+        - serviceAccountToken:
+            expirationSeconds: 3607
+            path: token
+        - configMap:
+            items:
+            - key: ca.crt
+              path: ca.crt
+            name: kube-root-ca.crt
+        - downwardAPI:
+            items:
+            - fieldRef:
+                apiVersion: v1
+                fieldPath: metadata.namespace
+              path: namespace
+  status:
+    conditions:
+    - lastProbeTime: null
+      lastTransitionTime: "2024-06-19T05:53:57Z"
+      status: "True"
+      type: PodReadyToStartContainers
+    - lastProbeTime: null
+      lastTransitionTime: "2024-06-19T05:53:54Z"
+      status: "True"
+      type: Initialized
+    - lastProbeTime: null
+      lastTransitionTime: "2024-06-19T05:54:54Z"
+      status: "True"
+      type: Ready
+    - lastProbeTime: null
+      lastTransitionTime: "2024-06-19T05:54:54Z"
+      status: "True"
+      type: ContainersReady
+    - lastProbeTime: null
+      lastTransitionTime: "2024-06-19T05:53:54Z"
+      status: "True"
+      type: PodScheduled
+    containerStatuses:
+    - containerID: containerd://12e9a1e89f201ac1105ff27c6ed6d72840c05cd7d562076e83cd8da2d00a7ff4
+      image: docker.io/grafana/loki:3.0.0
+      imageID: docker.io/grafana/loki@sha256:757b5fadf816a1396f1fea598152947421fa49cb8b2db1ddd2a6e30fae003253
+      lastState: {}
+      name: loki
+      ready: true
+      restartCount: 0
+      started: true
+      state:
+        running:
+          startedAt: "2024-06-19T05:53:56Z"
+    hostIP: 172.30.1.2
+    hostIPs:
+    - ip: 172.30.1.2
+    phase: Running
+    podIP: 192.168.0.11
+    podIPs:
+    - ip: 192.168.0.11
+    qosClass: BestEffort
+    startTime: "2024-06-19T05:53:54Z"
+- apiVersion: v1
+  kind: Service
+  metadata:
+    creationTimestamp: "2024-06-08T06:10:12Z"
+    labels:
+      component: apiserver
+      provider: kubernetes
+    name: kubernetes
+    namespace: default
+    resourceVersion: "196"
+    uid: 08388bfd-9a6b-4aab-b987-113398b5086f
+  spec:
+    clusterIP: 10.96.0.1
+    clusterIPs:
+    - 10.96.0.1
+    internalTrafficPolicy: Cluster
+    ipFamilies:
+    - IPv4
+    ipFamilyPolicy: SingleStack
+    ports:
+    - name: https
+      port: 443
+      protocol: TCP
+      targetPort: 6443
+    sessionAffinity: None
+    type: ClusterIP
+  status:
+    loadBalancer: {}
+- apiVersion: v1
+  kind: Service
+  metadata:
+    annotations:
+      meta.helm.sh/release-name: loki
+      meta.helm.sh/release-namespace: default
+    creationTimestamp: "2024-06-19T05:53:32Z"
+    labels:
+      app.kubernetes.io/component: backend
+      app.kubernetes.io/instance: loki
+      app.kubernetes.io/managed-by: Helm
+      app.kubernetes.io/name: loki
+      app.kubernetes.io/version: 3.0.0
+      helm.sh/chart: loki-6.6.3
+    name: loki-backend
+    namespace: default
+    resourceVersion: "2345"
+    uid: 745f87d5-f6ac-4cba-a18b-a06f3da37b50
+  spec:
+    clusterIP: 10.102.40.68
+    clusterIPs:
+    - 10.102.40.68
+    internalTrafficPolicy: Cluster
+    ipFamilies:
+    - IPv4
+    ipFamilyPolicy: SingleStack
+    ports:
+    - name: http-metrics
+      port: 3100
+      protocol: TCP
+      targetPort: http-metrics
+    - name: grpc
+      port: 9095
+      protocol: TCP
+      targetPort: grpc
+    selector:
+      app.kubernetes.io/component: backend
+      app.kubernetes.io/instance: loki
+      app.kubernetes.io/name: loki
+    sessionAffinity: None
+    type: ClusterIP
+  status:
+    loadBalancer: {}
+- apiVersion: v1
+  kind: Service
+  metadata:
+    annotations:
+      meta.helm.sh/release-name: loki
+      meta.helm.sh/release-namespace: default
+    creationTimestamp: "2024-06-19T05:53:32Z"
+    labels:
+      app.kubernetes.io/component: backend
+      app.kubernetes.io/instance: loki
+      app.kubernetes.io/managed-by: Helm
+      app.kubernetes.io/name: loki
+      prometheus.io/service-monitor: "false"
+      variant: headless
+    name: loki-backend-headless
+    namespace: default
+    resourceVersion: "2306"
+    uid: 45c5fc2f-fb56-4d36-8b91-102dee9b7e47
+  spec:
+    clusterIP: None
+    clusterIPs:
+    - None
+    internalTrafficPolicy: Cluster
+    ipFamilies:
+    - IPv4
+    ipFamilyPolicy: SingleStack
+    ports:
+    - name: http-metrics
+      port: 3100
+      protocol: TCP
+      targetPort: http-metrics
+    - name: grpc
+      port: 9095
+      protocol: TCP
+      targetPort: grpc
+    selector:
+      app.kubernetes.io/component: backend
+      app.kubernetes.io/instance: loki
+      app.kubernetes.io/name: loki
+    sessionAffinity: None
+    type: ClusterIP
+  status:
+    loadBalancer: {}
+- apiVersion: v1
+  kind: Service
+  metadata:
+    annotations:
+      meta.helm.sh/release-name: loki
+      meta.helm.sh/release-namespace: default
+    creationTimestamp: "2024-06-19T05:53:32Z"
+    labels:
+      app.kubernetes.io/component: canary
+      app.kubernetes.io/instance: loki
+      app.kubernetes.io/managed-by: Helm
+      app.kubernetes.io/name: loki
+      app.kubernetes.io/version: 3.0.0
+      helm.sh/chart: loki-6.6.3
+    name: loki-canary
+    namespace: default
+    resourceVersion: "2354"
+    uid: b84a17c0-e037-4292-b74b-d9d26936ba63
+  spec:
+    clusterIP: 10.105.128.243
+    clusterIPs:
+    - 10.105.128.243
+    internalTrafficPolicy: Cluster
+    ipFamilies:
+    - IPv4
+    ipFamilyPolicy: SingleStack
+    ports:
+    - name: http-metrics
+      port: 3500
+      protocol: TCP
+      targetPort: http-metrics
+    selector:
+      app.kubernetes.io/component: canary
+      app.kubernetes.io/instance: loki
+      app.kubernetes.io/name: loki
+    sessionAffinity: None
+    type: ClusterIP
+  status:
+    loadBalancer: {}
+- apiVersion: v1
+  kind: Service
+  metadata:
+    annotations:
+      meta.helm.sh/release-name: loki
+      meta.helm.sh/release-namespace: default
+    creationTimestamp: "2024-06-19T05:53:32Z"
+    labels:
+      app.kubernetes.io/component: memcached-chunks-cache
+      app.kubernetes.io/instance: loki
+      app.kubernetes.io/managed-by: Helm
+      app.kubernetes.io/name: loki
+      app.kubernetes.io/version: 3.0.0
+      helm.sh/chart: loki-6.6.3
+    name: loki-chunks-cache
+    namespace: default
+    resourceVersion: "2307"
+    uid: 91459a36-cd55-4583-b6e0-abd9ebbc4792
+  spec:
+    clusterIP: None
+    clusterIPs:
+    - None
+    internalTrafficPolicy: Cluster
+    ipFamilies:
+    - IPv4
+    ipFamilyPolicy: SingleStack
+    ports:
+    - name: memcached-client
+      port: 11211
+      protocol: TCP
+      targetPort: 11211
+    - name: http-metrics
+      port: 9150
+      protocol: TCP
+      targetPort: 9150
+    selector:
+      app.kubernetes.io/component: memcached-chunks-cache
+      app.kubernetes.io/instance: loki
+      app.kubernetes.io/name: loki
+    sessionAffinity: None
+    type: ClusterIP
+  status:
+    loadBalancer: {}
+- apiVersion: v1
+  kind: Service
+  metadata:
+    annotations:
+      meta.helm.sh/release-name: loki
+      meta.helm.sh/release-namespace: default
+    creationTimestamp: "2024-06-19T05:53:32Z"
+    labels:
+      app.kubernetes.io/component: gateway
+      app.kubernetes.io/instance: loki
+      app.kubernetes.io/managed-by: Helm
+      app.kubernetes.io/name: loki
+      app.kubernetes.io/version: 3.0.0
+      helm.sh/chart: loki-6.6.3
+    name: loki-gateway
+    namespace: default
+    resourceVersion: "2347"
+    uid: 2233be85-8280-415b-ae35-b1d002b54288
+  spec:
+    clusterIP: 10.97.169.48
+    clusterIPs:
+    - 10.97.169.48
+    internalTrafficPolicy: Cluster
+    ipFamilies:
+    - IPv4
+    ipFamilyPolicy: SingleStack
+    ports:
+    - name: http-metrics
+      port: 80
+      protocol: TCP
+      targetPort: http-metrics
+    selector:
+      app.kubernetes.io/component: gateway
+      app.kubernetes.io/instance: loki
+      app.kubernetes.io/name: loki
+    sessionAffinity: None
+    type: ClusterIP
+  status:
+    loadBalancer: {}
+- apiVersion: v1
+  kind: Service
+  metadata:
+    annotations:
+      meta.helm.sh/release-name: loki
+      meta.helm.sh/release-namespace: default
+    creationTimestamp: "2024-06-19T05:53:32Z"
+    labels:
+      app.kubernetes.io/instance: loki
+      app.kubernetes.io/managed-by: Helm
+      app.kubernetes.io/name: loki
+      app.kubernetes.io/version: 3.0.0
+      helm.sh/chart: loki-6.6.3
+    name: loki-memberlist
+    namespace: default
+    resourceVersion: "2303"
+    uid: fb157c41-6a79-4f41-9839-dbb8af05e3b5
+  spec:
+    clusterIP: None
+    clusterIPs:
+    - None
+    internalTrafficPolicy: Cluster
+    ipFamilies:
+    - IPv4
+    ipFamilyPolicy: SingleStack
+    ports:
+    - name: tcp
+      port: 7946
+      protocol: TCP
+      targetPort: http-memberlist
+    selector:
+      app.kubernetes.io/instance: loki
+      app.kubernetes.io/name: loki
+      app.kubernetes.io/part-of: memberlist
+    sessionAffinity: None
+    type: ClusterIP
+  status:
+    loadBalancer: {}
+- apiVersion: v1
+  kind: Service
+  metadata:
+    annotations:
+      meta.helm.sh/release-name: loki
+      meta.helm.sh/release-namespace: default
+    creationTimestamp: "2024-06-19T05:53:32Z"
+    labels:
+      app: minio
+      app.kubernetes.io/managed-by: Helm
+      chart: minio-4.0.15
+      heritage: Helm
+      monitoring: "true"
+      release: loki
+    name: loki-minio
+    namespace: default
+    resourceVersion: "2339"
+    uid: f2e26057-249e-45d5-84bf-4e409ea0227b
+  spec:
+    clusterIP: 10.99.76.14
+    clusterIPs:
+    - 10.99.76.14
+    internalTrafficPolicy: Cluster
+    ipFamilies:
+    - IPv4
+    ipFamilyPolicy: SingleStack
+    ports:
+    - name: http
+      port: 9000
+      protocol: TCP
+      targetPort: 9000
+    selector:
+      app: minio
+      release: loki
+    sessionAffinity: None
+    type: ClusterIP
+  status:
+    loadBalancer: {}
+- apiVersion: v1
+  kind: Service
+  metadata:
+    annotations:
+      meta.helm.sh/release-name: loki
+      meta.helm.sh/release-namespace: default
+    creationTimestamp: "2024-06-19T05:53:32Z"
+    labels:
+      app: minio
+      app.kubernetes.io/managed-by: Helm
+      chart: minio-4.0.15
+      heritage: Helm
+      release: loki
+    name: loki-minio-console
+    namespace: default
+    resourceVersion: "2333"
+    uid: d66f70fd-e17f-4604-8128-0305ca22f0a7
+  spec:
+    clusterIP: 10.98.113.167
+    clusterIPs:
+    - 10.98.113.167
+    internalTrafficPolicy: Cluster
+    ipFamilies:
+    - IPv4
+    ipFamilyPolicy: SingleStack
+    ports:
+    - name: http
+      port: 9001
+      protocol: TCP
+      targetPort: 9001
+    selector:
+      app: minio
+      release: loki
+    sessionAffinity: None
+    type: ClusterIP
+  status:
+    loadBalancer: {}
+- apiVersion: v1
+  kind: Service
+  metadata:
+    annotations:
+      meta.helm.sh/release-name: loki
+      meta.helm.sh/release-namespace: default
+    creationTimestamp: "2024-06-19T05:53:32Z"
+    labels:
+      app: minio
+      app.kubernetes.io/managed-by: Helm
+      chart: minio-4.0.15
+      heritage: Helm
+      release: loki
+    name: loki-minio-svc
+    namespace: default
+    resourceVersion: "2302"
+    uid: 265278b3-88cc-4183-b546-a0dbc29ffd71
+  spec:
+    clusterIP: None
+    clusterIPs:
+    - None
+    internalTrafficPolicy: Cluster
+    ipFamilies:
+    - IPv4
+    ipFamilyPolicy: SingleStack
+    ports:
+    - name: http
+      port: 9000
+      protocol: TCP
+      targetPort: 9000
+    publishNotReadyAddresses: true
+    selector:
+      app: minio
+      release: loki
+    sessionAffinity: None
+    type: ClusterIP
+  status:
+    loadBalancer: {}
+- apiVersion: v1
+  kind: Service
+  metadata:
+    annotations:
+      meta.helm.sh/release-name: loki
+      meta.helm.sh/release-namespace: default
+    creationTimestamp: "2024-06-19T05:53:32Z"
+    labels:
+      app.kubernetes.io/component: backend
+      app.kubernetes.io/instance: loki
+      app.kubernetes.io/managed-by: Helm
+      app.kubernetes.io/name: loki
+      prometheus.io/service-monitor: "false"
+    name: loki-query-scheduler-discovery
+    namespace: default
+    resourceVersion: "2305"
+    uid: 0464f58e-2b95-43e8-9378-5b046c00af2c
+  spec:
+    clusterIP: None
+    clusterIPs:
+    - None
+    internalTrafficPolicy: Cluster
+    ipFamilies:
+    - IPv4
+    ipFamilyPolicy: SingleStack
+    ports:
+    - name: http-metrics
+      port: 3100
+      protocol: TCP
+      targetPort: http-metrics
+    - name: grpc
+      port: 9095
+      protocol: TCP
+      targetPort: grpc
+    publishNotReadyAddresses: true
+    selector:
+      app.kubernetes.io/component: backend
+      app.kubernetes.io/instance: loki
+      app.kubernetes.io/name: loki
+    sessionAffinity: None
+    type: ClusterIP
+  status:
+    loadBalancer: {}
+- apiVersion: v1
+  kind: Service
+  metadata:
+    annotations:
+      meta.helm.sh/release-name: loki
+      meta.helm.sh/release-namespace: default
+    creationTimestamp: "2024-06-19T05:53:32Z"
+    labels:
+      app.kubernetes.io/component: read
+      app.kubernetes.io/instance: loki
+      app.kubernetes.io/managed-by: Helm
+      app.kubernetes.io/name: loki
+      app.kubernetes.io/version: 3.0.0
+      helm.sh/chart: loki-6.6.3
+    name: loki-read
+    namespace: default
+    resourceVersion: "2358"
+    uid: 1d0547a7-64e1-4b24-a5c9-2325809cdf37
+  spec:
+    clusterIP: 10.111.129.20
+    clusterIPs:
+    - 10.111.129.20
+    internalTrafficPolicy: Cluster
+    ipFamilies:
+    - IPv4
+    ipFamilyPolicy: SingleStack
+    ports:
+    - name: http-metrics
+      port: 3100
+      protocol: TCP
+      targetPort: http-metrics
+    - name: grpc
+      port: 9095
+      protocol: TCP
+      targetPort: grpc
+    selector:
+      app.kubernetes.io/component: read
+      app.kubernetes.io/instance: loki
+      app.kubernetes.io/name: loki
+    sessionAffinity: None
+    type: ClusterIP
+  status:
+    loadBalancer: {}
+- apiVersion: v1
+  kind: Service
+  metadata:
+    annotations:
+      meta.helm.sh/release-name: loki
+      meta.helm.sh/release-namespace: default
+    creationTimestamp: "2024-06-19T05:53:32Z"
+    labels:
+      app.kubernetes.io/component: read
+      app.kubernetes.io/instance: loki
+      app.kubernetes.io/managed-by: Helm
+      app.kubernetes.io/name: loki
+      prometheus.io/service-monitor: "false"
+      variant: headless
+    name: loki-read-headless
+    namespace: default
+    resourceVersion: "2308"
+    uid: 1d4a5701-e28b-4f6e-a25c-82337e1edf4c
+  spec:
+    clusterIP: None
+    clusterIPs:
+    - None
+    internalTrafficPolicy: Cluster
+    ipFamilies:
+    - IPv4
+    ipFamilyPolicy: SingleStack
+    ports:
+    - name: http-metrics
+      port: 3100
+      protocol: TCP
+      targetPort: http-metrics
+    - appProtocol: tcp
+      name: grpc
+      port: 9095
+      protocol: TCP
+      targetPort: grpc
+    selector:
+      app.kubernetes.io/component: read
+      app.kubernetes.io/instance: loki
+      app.kubernetes.io/name: loki
+    sessionAffinity: None
+    type: ClusterIP
+  status:
+    loadBalancer: {}
+- apiVersion: v1
+  kind: Service
+  metadata:
+    annotations:
+      meta.helm.sh/release-name: loki
+      meta.helm.sh/release-namespace: default
+    creationTimestamp: "2024-06-19T05:53:32Z"
+    labels:
+      app.kubernetes.io/component: memcached-results-cache
+      app.kubernetes.io/instance: loki
+      app.kubernetes.io/managed-by: Helm
+      app.kubernetes.io/name: loki
+      app.kubernetes.io/version: 3.0.0
+      helm.sh/chart: loki-6.6.3
+    name: loki-results-cache
+    namespace: default
+    resourceVersion: "2304"
+    uid: 1263e814-26ef-426e-a540-78db6ca20a95
+  spec:
+    clusterIP: None
+    clusterIPs:
+    - None
+    internalTrafficPolicy: Cluster
+    ipFamilies:
+    - IPv4
+    ipFamilyPolicy: SingleStack
+    ports:
+    - name: memcached-client
+      port: 11211
+      protocol: TCP
+      targetPort: 11211
+    - name: http-metrics
+      port: 9150
+      protocol: TCP
+      targetPort: 9150
+    selector:
+      app.kubernetes.io/component: memcached-results-cache
+      app.kubernetes.io/instance: loki
+      app.kubernetes.io/name: loki
+    sessionAffinity: None
+    type: ClusterIP
+  status:
+    loadBalancer: {}
+- apiVersion: v1
+  kind: Service
+  metadata:
+    annotations:
+      meta.helm.sh/release-name: loki
+      meta.helm.sh/release-namespace: default
+    creationTimestamp: "2024-06-19T05:53:32Z"
+    labels:
+      app.kubernetes.io/component: write
+      app.kubernetes.io/instance: loki
+      app.kubernetes.io/managed-by: Helm
+      app.kubernetes.io/name: loki
+      app.kubernetes.io/version: 3.0.0
+      helm.sh/chart: loki-6.6.3
+    name: loki-write
+    namespace: default
+    resourceVersion: "2324"
+    uid: 5a7e556f-47d3-4e96-aaf1-92ecd920248d
+  spec:
+    clusterIP: 10.106.221.84
+    clusterIPs:
+    - 10.106.221.84
+    internalTrafficPolicy: Cluster
+    ipFamilies:
+    - IPv4
+    ipFamilyPolicy: SingleStack
+    ports:
+    - name: http-metrics
+      port: 3100
+      protocol: TCP
+      targetPort: http-metrics
+    - name: grpc
+      port: 9095
+      protocol: TCP
+      targetPort: grpc
+    selector:
+      app.kubernetes.io/component: write
+      app.kubernetes.io/instance: loki
+      app.kubernetes.io/name: loki
+    sessionAffinity: None
+    type: ClusterIP
+  status:
+    loadBalancer: {}
+- apiVersion: v1
+  kind: Service
+  metadata:
+    annotations:
+      meta.helm.sh/release-name: loki
+      meta.helm.sh/release-namespace: default
+    creationTimestamp: "2024-06-19T05:53:32Z"
+    labels:
+      app.kubernetes.io/component: write
+      app.kubernetes.io/instance: loki
+      app.kubernetes.io/managed-by: Helm
+      app.kubernetes.io/name: loki
+      prometheus.io/service-monitor: "false"
+      variant: headless
+    name: loki-write-headless
+    namespace: default
+    resourceVersion: "2301"
+    uid: dedb4eb9-9976-4c85-b2ae-a2a3e771b581
+  spec:
+    clusterIP: None
+    clusterIPs:
+    - None
+    internalTrafficPolicy: Cluster
+    ipFamilies:
+    - IPv4
+    ipFamilyPolicy: SingleStack
+    ports:
+    - name: http-metrics
+      port: 3100
+      protocol: TCP
+      targetPort: http-metrics
+    - appProtocol: tcp
+      name: grpc
+      port: 9095
+      protocol: TCP
+      targetPort: grpc
+    selector:
+      app.kubernetes.io/component: write
+      app.kubernetes.io/instance: loki
+      app.kubernetes.io/name: loki
+    sessionAffinity: None
+    type: ClusterIP
+  status:
+    loadBalancer: {}
+- apiVersion: apps/v1
+  kind: DaemonSet
+  metadata:
+    annotations:
+      deprecated.daemonset.template.generation: "1"
+      meta.helm.sh/release-name: loki
+      meta.helm.sh/release-namespace: default
+    creationTimestamp: "2024-06-19T05:53:33Z"
+    generation: 1
+    labels:
+      app.kubernetes.io/component: canary
+      app.kubernetes.io/instance: loki
+      app.kubernetes.io/managed-by: Helm
+      app.kubernetes.io/name: loki
+      app.kubernetes.io/version: 3.0.0
+      helm.sh/chart: loki-6.6.3
+    name: loki-canary
+    namespace: default
+    resourceVersion: "2785"
+    uid: 50b6d670-bef3-4f90-91ae-2bfe8dfc87b3
+  spec:
+    revisionHistoryLimit: 10
+    selector:
+      matchLabels:
+        app.kubernetes.io/component: canary
+        app.kubernetes.io/instance: loki
+        app.kubernetes.io/name: loki
+    template:
+      metadata:
+        creationTimestamp: null
+        labels:
+          app.kubernetes.io/component: canary
+          app.kubernetes.io/instance: loki
+          app.kubernetes.io/name: loki
+      spec:
+        containers:
+        - args:
+          - -addr=loki-gateway.default.svc.cluster.local.:80
+          - -labelname=pod
+          - -labelvalue=$(POD_NAME)
+          - -user=self-monitoring
+          - -tenant-id=self-monitoring
+          - -pass=
+          - -push=true
+          env:
+          - name: POD_NAME
+            valueFrom:
+              fieldRef:
+                apiVersion: v1
+                fieldPath: metadata.name
+          image: docker.io/grafana/loki-canary:3.0.0
+          imagePullPolicy: IfNotPresent
+          name: loki-canary
+          ports:
+          - containerPort: 3500
+            name: http-metrics
+            protocol: TCP
+          readinessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /metrics
+              port: http-metrics
+              scheme: HTTP
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 1
+          resources: {}
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+              - ALL
+            readOnlyRootFilesystem: true
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+        dnsPolicy: ClusterFirst
+        restartPolicy: Always
+        schedulerName: default-scheduler
+        securityContext:
+          fsGroup: 10001
+          runAsGroup: 10001
+          runAsNonRoot: true
+          runAsUser: 10001
+        serviceAccount: loki-canary
+        serviceAccountName: loki-canary
+        terminationGracePeriodSeconds: 30
+    updateStrategy:
+      rollingUpdate:
+        maxSurge: 0
+        maxUnavailable: 1
+      type: RollingUpdate
+  status:
+    currentNumberScheduled: 2
+    desiredNumberScheduled: 2
+    numberAvailable: 2
+    numberMisscheduled: 0
+    numberReady: 2
+    observedGeneration: 1
+    updatedNumberScheduled: 2
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    annotations:
+      deployment.kubernetes.io/revision: "1"
+      meta.helm.sh/release-name: loki
+      meta.helm.sh/release-namespace: default
+    creationTimestamp: "2024-06-19T05:53:33Z"
+    generation: 1
+    labels:
+      app.kubernetes.io/component: gateway
+      app.kubernetes.io/instance: loki
+      app.kubernetes.io/managed-by: Helm
+      app.kubernetes.io/name: loki
+      app.kubernetes.io/version: 3.0.0
+      helm.sh/chart: loki-6.6.3
+    name: loki-gateway
+    namespace: default
+    resourceVersion: "2780"
+    uid: 2ffcbb98-5ac7-4050-9832-9a315667ce51
+  spec:
+    progressDeadlineSeconds: 600
+    replicas: 1
+    revisionHistoryLimit: 10
+    selector:
+      matchLabels:
+        app.kubernetes.io/component: gateway
+        app.kubernetes.io/instance: loki
+        app.kubernetes.io/name: loki
+    strategy:
+      rollingUpdate:
+        maxSurge: 25%
+        maxUnavailable: 25%
+      type: RollingUpdate
+    template:
+      metadata:
+        annotations:
+          checksum/config: d9356614f4808042352864a89abc47762fa5abd91ab8d6455ae39ed8f40fd3c7
+        creationTimestamp: null
+        labels:
+          app.kubernetes.io/component: gateway
+          app.kubernetes.io/instance: loki
+          app.kubernetes.io/name: loki
+      spec:
+        affinity:
+          podAntiAffinity:
+            requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchLabels:
+                  app.kubernetes.io/component: gateway
+              topologyKey: kubernetes.io/hostname
+        containers:
+        - image: docker.io/nginxinc/nginx-unprivileged:1.24-alpine
+          imagePullPolicy: IfNotPresent
+          name: nginx
+          ports:
+          - containerPort: 8080
+            name: http-metrics
+            protocol: TCP
+          readinessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /
+              port: http-metrics
+              scheme: HTTP
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 1
+          resources: {}
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+              - ALL
+            readOnlyRootFilesystem: true
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          volumeMounts:
+          - mountPath: /etc/nginx
+            name: config
+          - mountPath: /tmp
+            name: tmp
+          - mountPath: /docker-entrypoint.d
+            name: docker-entrypoint-d-override
+        dnsPolicy: ClusterFirst
+        enableServiceLinks: true
+        restartPolicy: Always
+        schedulerName: default-scheduler
+        securityContext:
+          fsGroup: 101
+          runAsGroup: 101
+          runAsNonRoot: true
+          runAsUser: 101
+        serviceAccount: loki
+        serviceAccountName: loki
+        terminationGracePeriodSeconds: 30
+        volumes:
+        - configMap:
+            defaultMode: 420
+            name: loki-gateway
+          name: config
+        - emptyDir: {}
+          name: tmp
+        - emptyDir: {}
+          name: docker-entrypoint-d-override
+  status:
+    availableReplicas: 1
+    conditions:
+    - lastTransitionTime: "2024-06-19T05:54:04Z"
+      lastUpdateTime: "2024-06-19T05:54:04Z"
+      message: Deployment has minimum availability.
+      reason: MinimumReplicasAvailable
+      status: "True"
+      type: Available
+    - lastTransitionTime: "2024-06-19T05:53:33Z"
+      lastUpdateTime: "2024-06-19T05:54:04Z"
+      message: ReplicaSet "loki-gateway-6cb4677947" has successfully progressed.
+      reason: NewReplicaSetAvailable
+      status: "True"
+      type: Progressing
+    observedGeneration: 1
+    readyReplicas: 1
+    replicas: 1
+    updatedReplicas: 1
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    annotations:
+      deployment.kubernetes.io/revision: "1"
+      meta.helm.sh/release-name: loki
+      meta.helm.sh/release-namespace: default
+    creationTimestamp: "2024-06-19T05:53:33Z"
+    generation: 1
+    labels:
+      app.kubernetes.io/component: read
+      app.kubernetes.io/instance: loki
+      app.kubernetes.io/managed-by: Helm
+      app.kubernetes.io/name: loki
+      app.kubernetes.io/part-of: memberlist
+      app.kubernetes.io/version: 3.0.0
+      helm.sh/chart: loki-6.6.3
+    name: loki-read
+    namespace: default
+    resourceVersion: "3090"
+    uid: 68dacd35-0cba-4d56-ba3e-5c51364e2dcf
+  spec:
+    progressDeadlineSeconds: 600
+    replicas: 2
+    revisionHistoryLimit: 10
+    selector:
+      matchLabels:
+        app.kubernetes.io/component: read
+        app.kubernetes.io/instance: loki
+        app.kubernetes.io/name: loki
+    strategy:
+      rollingUpdate:
+        maxSurge: 0
+        maxUnavailable: 1
+      type: RollingUpdate
+    template:
+      metadata:
+        annotations:
+          checksum/config: 62dcad17d9932a80434500de5e3f7436f2fd18340468da00fd85c5dbf77a95e9
+        creationTimestamp: null
+        labels:
+          app.kubernetes.io/component: read
+          app.kubernetes.io/instance: loki
+          app.kubernetes.io/name: loki
+          app.kubernetes.io/part-of: memberlist
+      spec:
+        affinity:
+          podAntiAffinity:
+            requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchLabels:
+                  app.kubernetes.io/component: read
+              topologyKey: kubernetes.io/hostname
+        automountServiceAccountToken: true
+        containers:
+        - args:
+          - -config.file=/etc/loki/config/config.yaml
+          - -target=read
+          - -legacy-read-mode=false
+          - -common.compactor-grpc-address=loki-backend.default.svc.cluster.local:9095
+          image: docker.io/grafana/loki:3.0.0
+          imagePullPolicy: IfNotPresent
+          name: loki
+          ports:
+          - containerPort: 3100
+            name: http-metrics
+            protocol: TCP
+          - containerPort: 9095
+            name: grpc
+            protocol: TCP
+          - containerPort: 7946
+            name: http-memberlist
+            protocol: TCP
+          readinessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /ready
+              port: http-metrics
+              scheme: HTTP
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 1
+          resources: {}
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+              - ALL
+            readOnlyRootFilesystem: true
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          volumeMounts:
+          - mountPath: /etc/loki/config
+            name: config
+          - mountPath: /etc/loki/runtime-config
+            name: runtime-config
+          - mountPath: /tmp
+            name: tmp
+          - mountPath: /var/loki
+            name: data
+        dnsPolicy: ClusterFirst
+        restartPolicy: Always
+        schedulerName: default-scheduler
+        securityContext:
+          fsGroup: 10001
+          runAsGroup: 10001
+          runAsNonRoot: true
+          runAsUser: 10001
+        serviceAccount: loki
+        serviceAccountName: loki
+        terminationGracePeriodSeconds: 30
+        volumes:
+        - emptyDir: {}
+          name: tmp
+        - emptyDir: {}
+          name: data
+        - configMap:
+            defaultMode: 420
+            items:
+            - key: config.yaml
+              path: config.yaml
+            name: loki
+          name: config
+        - configMap:
+            defaultMode: 420
+            name: loki-runtime
+          name: runtime-config
+  status:
+    availableReplicas: 2
+    conditions:
+    - lastTransitionTime: "2024-06-19T05:55:15Z"
+      lastUpdateTime: "2024-06-19T05:55:15Z"
+      message: Deployment has minimum availability.
+      reason: MinimumReplicasAvailable
+      status: "True"
+      type: Available
+    - lastTransitionTime: "2024-06-19T05:53:33Z"
+      lastUpdateTime: "2024-06-19T05:55:44Z"
+      message: ReplicaSet "loki-read-6f78c5964f" has successfully progressed.
+      reason: NewReplicaSetAvailable
+      status: "True"
+      type: Progressing
+    observedGeneration: 1
+    readyReplicas: 2
+    replicas: 2
+    updatedReplicas: 2
+- apiVersion: apps/v1
+  kind: ReplicaSet
+  metadata:
+    annotations:
+      deployment.kubernetes.io/desired-replicas: "1"
+      deployment.kubernetes.io/max-replicas: "2"
+      deployment.kubernetes.io/revision: "1"
+      meta.helm.sh/release-name: loki
+      meta.helm.sh/release-namespace: default
+    creationTimestamp: "2024-06-19T05:53:33Z"
+    generation: 1
+    labels:
+      app.kubernetes.io/component: gateway
+      app.kubernetes.io/instance: loki
+      app.kubernetes.io/name: loki
+      pod-template-hash: 6cb4677947
+    name: loki-gateway-6cb4677947
+    namespace: default
+    ownerReferences:
+    - apiVersion: apps/v1
+      blockOwnerDeletion: true
+      controller: true
+      kind: Deployment
+      name: loki-gateway
+      uid: 2ffcbb98-5ac7-4050-9832-9a315667ce51
+    resourceVersion: "2778"
+    uid: 9533c220-ac6a-42da-937a-0da37153ce9d
+  spec:
+    replicas: 1
+    selector:
+      matchLabels:
+        app.kubernetes.io/component: gateway
+        app.kubernetes.io/instance: loki
+        app.kubernetes.io/name: loki
+        pod-template-hash: 6cb4677947
+    template:
+      metadata:
+        annotations:
+          checksum/config: d9356614f4808042352864a89abc47762fa5abd91ab8d6455ae39ed8f40fd3c7
+        creationTimestamp: null
+        labels:
+          app.kubernetes.io/component: gateway
+          app.kubernetes.io/instance: loki
+          app.kubernetes.io/name: loki
+          pod-template-hash: 6cb4677947
+      spec:
+        affinity:
+          podAntiAffinity:
+            requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchLabels:
+                  app.kubernetes.io/component: gateway
+              topologyKey: kubernetes.io/hostname
+        containers:
+        - image: docker.io/nginxinc/nginx-unprivileged:1.24-alpine
+          imagePullPolicy: IfNotPresent
+          name: nginx
+          ports:
+          - containerPort: 8080
+            name: http-metrics
+            protocol: TCP
+          readinessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /
+              port: http-metrics
+              scheme: HTTP
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 1
+          resources: {}
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+              - ALL
+            readOnlyRootFilesystem: true
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          volumeMounts:
+          - mountPath: /etc/nginx
+            name: config
+          - mountPath: /tmp
+            name: tmp
+          - mountPath: /docker-entrypoint.d
+            name: docker-entrypoint-d-override
+        dnsPolicy: ClusterFirst
+        enableServiceLinks: true
+        restartPolicy: Always
+        schedulerName: default-scheduler
+        securityContext:
+          fsGroup: 101
+          runAsGroup: 101
+          runAsNonRoot: true
+          runAsUser: 101
+        serviceAccount: loki
+        serviceAccountName: loki
+        terminationGracePeriodSeconds: 30
+        volumes:
+        - configMap:
+            defaultMode: 420
+            name: loki-gateway
+          name: config
+        - emptyDir: {}
+          name: tmp
+        - emptyDir: {}
+          name: docker-entrypoint-d-override
+  status:
+    availableReplicas: 1
+    fullyLabeledReplicas: 1
+    observedGeneration: 1
+    readyReplicas: 1
+    replicas: 1
+- apiVersion: apps/v1
+  kind: ReplicaSet
+  metadata:
+    annotations:
+      deployment.kubernetes.io/desired-replicas: "2"
+      deployment.kubernetes.io/max-replicas: "2"
+      deployment.kubernetes.io/revision: "1"
+      meta.helm.sh/release-name: loki
+      meta.helm.sh/release-namespace: default
+    creationTimestamp: "2024-06-19T05:53:33Z"
+    generation: 1
+    labels:
+      app.kubernetes.io/component: read
+      app.kubernetes.io/instance: loki
+      app.kubernetes.io/name: loki
+      app.kubernetes.io/part-of: memberlist
+      pod-template-hash: 6f78c5964f
+    name: loki-read-6f78c5964f
+    namespace: default
+    ownerReferences:
+    - apiVersion: apps/v1
+      blockOwnerDeletion: true
+      controller: true
+      kind: Deployment
+      name: loki-read
+      uid: 68dacd35-0cba-4d56-ba3e-5c51364e2dcf
+    resourceVersion: "3085"
+    uid: 5b98cbfe-48b7-4152-a6ee-63d6d109ad7e
+  spec:
+    replicas: 2
+    selector:
+      matchLabels:
+        app.kubernetes.io/component: read
+        app.kubernetes.io/instance: loki
+        app.kubernetes.io/name: loki
+        pod-template-hash: 6f78c5964f
+    template:
+      metadata:
+        annotations:
+          checksum/config: 62dcad17d9932a80434500de5e3f7436f2fd18340468da00fd85c5dbf77a95e9
+        creationTimestamp: null
+        labels:
+          app.kubernetes.io/component: read
+          app.kubernetes.io/instance: loki
+          app.kubernetes.io/name: loki
+          app.kubernetes.io/part-of: memberlist
+          pod-template-hash: 6f78c5964f
+      spec:
+        affinity:
+          podAntiAffinity:
+            requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchLabels:
+                  app.kubernetes.io/component: read
+              topologyKey: kubernetes.io/hostname
+        automountServiceAccountToken: true
+        containers:
+        - args:
+          - -config.file=/etc/loki/config/config.yaml
+          - -target=read
+          - -legacy-read-mode=false
+          - -common.compactor-grpc-address=loki-backend.default.svc.cluster.local:9095
+          image: docker.io/grafana/loki:3.0.0
+          imagePullPolicy: IfNotPresent
+          name: loki
+          ports:
+          - containerPort: 3100
+            name: http-metrics
+            protocol: TCP
+          - containerPort: 9095
+            name: grpc
+            protocol: TCP
+          - containerPort: 7946
+            name: http-memberlist
+            protocol: TCP
+          readinessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /ready
+              port: http-metrics
+              scheme: HTTP
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 1
+          resources: {}
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+              - ALL
+            readOnlyRootFilesystem: true
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          volumeMounts:
+          - mountPath: /etc/loki/config
+            name: config
+          - mountPath: /etc/loki/runtime-config
+            name: runtime-config
+          - mountPath: /tmp
+            name: tmp
+          - mountPath: /var/loki
+            name: data
+        dnsPolicy: ClusterFirst
+        restartPolicy: Always
+        schedulerName: default-scheduler
+        securityContext:
+          fsGroup: 10001
+          runAsGroup: 10001
+          runAsNonRoot: true
+          runAsUser: 10001
+        serviceAccount: loki
+        serviceAccountName: loki
+        terminationGracePeriodSeconds: 30
+        volumes:
+        - emptyDir: {}
+          name: tmp
+        - emptyDir: {}
+          name: data
+        - configMap:
+            defaultMode: 420
+            items:
+            - key: config.yaml
+              path: config.yaml
+            name: loki
+          name: config
+        - configMap:
+            defaultMode: 420
+            name: loki-runtime
+          name: runtime-config
+  status:
+    availableReplicas: 2
+    fullyLabeledReplicas: 2
+    observedGeneration: 1
+    readyReplicas: 2
+    replicas: 2
+- apiVersion: apps/v1
+  kind: StatefulSet
+  metadata:
+    annotations:
+      meta.helm.sh/release-name: loki
+      meta.helm.sh/release-namespace: default
+    creationTimestamp: "2024-06-19T05:53:33Z"
+    generation: 1
+    labels:
+      app.kubernetes.io/component: backend
+      app.kubernetes.io/instance: loki
+      app.kubernetes.io/managed-by: Helm
+      app.kubernetes.io/name: loki
+      app.kubernetes.io/part-of: memberlist
+      app.kubernetes.io/version: 3.0.0
+      helm.sh/chart: loki-6.6.3
+    name: loki-backend
+    namespace: default
+    resourceVersion: "2985"
+    uid: 2ff12b81-3e90-42a7-bc27-b0f662a33012
+  spec:
+    persistentVolumeClaimRetentionPolicy:
+      whenDeleted: Delete
+      whenScaled: Delete
+    podManagementPolicy: Parallel
+    replicas: 2
+    revisionHistoryLimit: 10
+    selector:
+      matchLabels:
+        app.kubernetes.io/component: backend
+        app.kubernetes.io/instance: loki
+        app.kubernetes.io/name: loki
+    serviceName: loki-backend-headless
+    template:
+      metadata:
+        annotations:
+          checksum/config: 62dcad17d9932a80434500de5e3f7436f2fd18340468da00fd85c5dbf77a95e9
+        creationTimestamp: null
+        labels:
+          app.kubernetes.io/component: backend
+          app.kubernetes.io/instance: loki
+          app.kubernetes.io/name: loki
+          app.kubernetes.io/part-of: memberlist
+      spec:
+        affinity:
+          podAntiAffinity:
+            requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchLabels:
+                  app.kubernetes.io/component: backend
+              topologyKey: kubernetes.io/hostname
+        automountServiceAccountToken: true
+        containers:
+        - env:
+          - name: METHOD
+            value: WATCH
+          - name: LABEL
+            value: loki_rule
+          - name: FOLDER
+            value: /rules
+          - name: RESOURCE
+            value: both
+          - name: WATCH_SERVER_TIMEOUT
+            value: "60"
+          - name: WATCH_CLIENT_TIMEOUT
+            value: "60"
+          - name: LOG_LEVEL
+            value: INFO
+          image: kiwigrid/k8s-sidecar:1.24.3
+          imagePullPolicy: IfNotPresent
+          name: loki-sc-rules
+          resources: {}
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          volumeMounts:
+          - mountPath: /rules
+            name: sc-rules-volume
+        - args:
+          - -config.file=/etc/loki/config/config.yaml
+          - -target=backend
+          - -legacy-read-mode=false
+          image: docker.io/grafana/loki:3.0.0
+          imagePullPolicy: IfNotPresent
+          name: loki
+          ports:
+          - containerPort: 3100
+            name: http-metrics
+            protocol: TCP
+          - containerPort: 9095
+            name: grpc
+            protocol: TCP
+          - containerPort: 7946
+            name: http-memberlist
+            protocol: TCP
+          readinessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /ready
+              port: http-metrics
+              scheme: HTTP
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 1
+          resources: {}
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+              - ALL
+            readOnlyRootFilesystem: true
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          volumeMounts:
+          - mountPath: /etc/loki/config
+            name: config
+          - mountPath: /etc/loki/runtime-config
+            name: runtime-config
+          - mountPath: /tmp
+            name: tmp
+          - mountPath: /var/loki
+            name: data
+          - mountPath: /rules
+            name: sc-rules-volume
+        dnsPolicy: ClusterFirst
+        restartPolicy: Always
+        schedulerName: default-scheduler
+        securityContext:
+          fsGroup: 10001
+          runAsGroup: 10001
+          runAsNonRoot: true
+          runAsUser: 10001
+        serviceAccount: loki
+        serviceAccountName: loki
+        terminationGracePeriodSeconds: 300
+        volumes:
+        - emptyDir: {}
+          name: tmp
+        - configMap:
+            defaultMode: 420
+            items:
+            - key: config.yaml
+              path: config.yaml
+            name: loki
+          name: config
+        - configMap:
+            defaultMode: 420
+            name: loki-runtime
+          name: runtime-config
+        - emptyDir: {}
+          name: sc-rules-volume
+    updateStrategy:
+      rollingUpdate:
+        partition: 0
+      type: RollingUpdate
+    volumeClaimTemplates:
+    - apiVersion: v1
+      kind: PersistentVolumeClaim
+      metadata:
+        creationTimestamp: null
+        name: data
+      spec:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: 10Gi
+        volumeMode: Filesystem
+      status:
+        phase: Pending
+  status:
+    availableReplicas: 2
+    collisionCount: 0
+    currentReplicas: 2
+    currentRevision: loki-backend-7bc764695
+    observedGeneration: 1
+    readyReplicas: 2
+    replicas: 2
+    updateRevision: loki-backend-7bc764695
+    updatedReplicas: 2
+- apiVersion: apps/v1
+  kind: StatefulSet
+  metadata:
+    annotations:
+      meta.helm.sh/release-name: loki
+      meta.helm.sh/release-namespace: default
+    creationTimestamp: "2024-06-19T05:53:33Z"
+    generation: 1
+    labels:
+      app.kubernetes.io/component: memcached-chunks-cache
+      app.kubernetes.io/instance: loki
+      app.kubernetes.io/managed-by: Helm
+      app.kubernetes.io/name: loki
+      app.kubernetes.io/version: 3.0.0
+      helm.sh/chart: loki-6.6.3
+      name: memcached-chunks-cache
+    name: loki-chunks-cache
+    namespace: default
+    resourceVersion: "2441"
+    uid: d338fe72-dd50-4149-9459-5d58a270b038
+  spec:
+    persistentVolumeClaimRetentionPolicy:
+      whenDeleted: Retain
+      whenScaled: Retain
+    podManagementPolicy: Parallel
+    replicas: 1
+    revisionHistoryLimit: 10
+    selector:
+      matchLabels:
+        app.kubernetes.io/component: memcached-chunks-cache
+        app.kubernetes.io/instance: loki
+        app.kubernetes.io/name: loki
+        name: memcached-chunks-cache
+    serviceName: loki-chunks-cache
+    template:
+      metadata:
+        creationTimestamp: null
+        labels:
+          app.kubernetes.io/component: memcached-chunks-cache
+          app.kubernetes.io/instance: loki
+          app.kubernetes.io/name: loki
+          name: memcached-chunks-cache
+      spec:
+        affinity: {}
+        containers:
+        - args:
+          - -m 8192
+          - --extended=modern,track_sizes
+          - -I 5m
+          - -c 16384
+          - -v
+          - -u 11211
+          image: memcached:1.6.23-alpine
+          imagePullPolicy: IfNotPresent
+          name: memcached
+          ports:
+          - containerPort: 11211
+            name: client
+            protocol: TCP
+          resources:
+            limits:
+              memory: 9830Mi
+            requests:
+              cpu: 500m
+              memory: 9830Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+              - ALL
+            readOnlyRootFilesystem: true
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+        - args:
+          - --memcached.address=localhost:11211
+          - --web.listen-address=0.0.0.0:9150
+          image: prom/memcached-exporter:v0.14.2
+          imagePullPolicy: IfNotPresent
+          name: exporter
+          ports:
+          - containerPort: 9150
+            name: http-metrics
+            protocol: TCP
+          resources: {}
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+              - ALL
+            readOnlyRootFilesystem: true
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+        dnsPolicy: ClusterFirst
+        restartPolicy: Always
+        schedulerName: default-scheduler
+        securityContext: {}
+        serviceAccount: loki
+        serviceAccountName: loki
+        terminationGracePeriodSeconds: 60
+    updateStrategy:
+      type: RollingUpdate
+  status:
+    availableReplicas: 0
+    collisionCount: 0
+    currentReplicas: 1
+    currentRevision: loki-chunks-cache-dbf664dd6
+    observedGeneration: 1
+    replicas: 1
+    updateRevision: loki-chunks-cache-dbf664dd6
+    updatedReplicas: 1
+- apiVersion: apps/v1
+  kind: StatefulSet
+  metadata:
+    annotations:
+      meta.helm.sh/release-name: loki
+      meta.helm.sh/release-namespace: default
+    creationTimestamp: "2024-06-19T05:53:33Z"
+    generation: 1
+    labels:
+      app: minio
+      app.kubernetes.io/managed-by: Helm
+      chart: minio-4.0.15
+      heritage: Helm
+      release: loki
+    name: loki-minio
+    namespace: default
+    resourceVersion: "2829"
+    uid: 160aff58-6f2a-44af-865c-32d698a41868
+  spec:
+    persistentVolumeClaimRetentionPolicy:
+      whenDeleted: Retain
+      whenScaled: Retain
+    podManagementPolicy: Parallel
+    replicas: 1
+    revisionHistoryLimit: 10
+    selector:
+      matchLabels:
+        app: minio
+        release: loki
+    serviceName: loki-minio-svc
+    template:
+      metadata:
+        annotations:
+          checksum/config: 5ccf6de054849c650529eddba7e4c1d6dde7e79291d93059e1d1ca68067e5d5c
+          checksum/secrets: 06573763dc90ff6665c7dca1ba8ec15d7ff909a988372a719880d0918da249ab
+        creationTimestamp: null
+        labels:
+          app: minio
+          release: loki
+        name: loki-minio
+      spec:
+        containers:
+        - command:
+          - /bin/sh
+          - -ce
+          - /usr/bin/docker-entrypoint.sh minio server  http://loki-minio-{0...0}.loki-minio-svc.default.svc.cluster.local/export-{0...1}
+            -S /etc/minio/certs/ --address :9000 --console-address :9001
+          env:
+          - name: MINIO_ROOT_USER
+            valueFrom:
+              secretKeyRef:
+                key: rootUser
+                name: loki-minio
+          - name: MINIO_ROOT_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                key: rootPassword
+                name: loki-minio
+          - name: MINIO_PROMETHEUS_AUTH_TYPE
+            value: public
+          image: quay.io/minio/minio:RELEASE.2022-09-17T00-09-45Z
+          imagePullPolicy: IfNotPresent
+          name: minio
+          ports:
+          - containerPort: 9000
+            name: http
+            protocol: TCP
+          - containerPort: 9001
+            name: http-console
+            protocol: TCP
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          volumeMounts:
+          - mountPath: /export-0
+            name: export-0
+          - mountPath: /export-1
+            name: export-1
+        dnsPolicy: ClusterFirst
+        restartPolicy: Always
+        schedulerName: default-scheduler
+        securityContext:
+          fsGroup: 1000
+          fsGroupChangePolicy: OnRootMismatch
+          runAsGroup: 1000
+          runAsUser: 1000
+        serviceAccount: minio-sa
+        serviceAccountName: minio-sa
+        terminationGracePeriodSeconds: 30
+        volumes:
+        - name: minio-user
+          secret:
+            defaultMode: 420
+            secretName: loki-minio
+    updateStrategy:
+      type: RollingUpdate
+    volumeClaimTemplates:
+    - apiVersion: v1
+      kind: PersistentVolumeClaim
+      metadata:
+        creationTimestamp: null
+        name: export-0
+      spec:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: 5Gi
+        volumeMode: Filesystem
+      status:
+        phase: Pending
+    - apiVersion: v1
+      kind: PersistentVolumeClaim
+      metadata:
+        creationTimestamp: null
+        name: export-1
+      spec:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: 5Gi
+        volumeMode: Filesystem
+      status:
+        phase: Pending
+  status:
+    availableReplicas: 1
+    collisionCount: 0
+    currentReplicas: 1
+    currentRevision: loki-minio-796bc746f4
+    observedGeneration: 1
+    readyReplicas: 1
+    replicas: 1
+    updateRevision: loki-minio-796bc746f4
+    updatedReplicas: 1
+- apiVersion: apps/v1
+  kind: StatefulSet
+  metadata:
+    annotations:
+      meta.helm.sh/release-name: loki
+      meta.helm.sh/release-namespace: default
+    creationTimestamp: "2024-06-19T05:53:33Z"
+    generation: 1
+    labels:
+      app.kubernetes.io/component: memcached-results-cache
+      app.kubernetes.io/instance: loki
+      app.kubernetes.io/managed-by: Helm
+      app.kubernetes.io/name: loki
+      app.kubernetes.io/version: 3.0.0
+      helm.sh/chart: loki-6.6.3
+      name: memcached-results-cache
+    name: loki-results-cache
+    namespace: default
+    resourceVersion: "2675"
+    uid: f73ad5d9-f567-4399-be5a-b42e378162fe
+  spec:
+    persistentVolumeClaimRetentionPolicy:
+      whenDeleted: Retain
+      whenScaled: Retain
+    podManagementPolicy: Parallel
+    replicas: 1
+    revisionHistoryLimit: 10
+    selector:
+      matchLabels:
+        app.kubernetes.io/component: memcached-results-cache
+        app.kubernetes.io/instance: loki
+        app.kubernetes.io/name: loki
+        name: memcached-results-cache
+    serviceName: loki-results-cache
+    template:
+      metadata:
+        creationTimestamp: null
+        labels:
+          app.kubernetes.io/component: memcached-results-cache
+          app.kubernetes.io/instance: loki
+          app.kubernetes.io/name: loki
+          name: memcached-results-cache
+      spec:
+        affinity: {}
+        containers:
+        - args:
+          - -m 1024
+          - --extended=modern,track_sizes
+          - -I 5m
+          - -c 16384
+          - -v
+          - -u 11211
+          image: memcached:1.6.23-alpine
+          imagePullPolicy: IfNotPresent
+          name: memcached
+          ports:
+          - containerPort: 11211
+            name: client
+            protocol: TCP
+          resources:
+            limits:
+              memory: 1229Mi
+            requests:
+              cpu: 500m
+              memory: 1229Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+              - ALL
+            readOnlyRootFilesystem: true
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+        - args:
+          - --memcached.address=localhost:11211
+          - --web.listen-address=0.0.0.0:9150
+          image: prom/memcached-exporter:v0.14.2
+          imagePullPolicy: IfNotPresent
+          name: exporter
+          ports:
+          - containerPort: 9150
+            name: http-metrics
+            protocol: TCP
+          resources: {}
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+              - ALL
+            readOnlyRootFilesystem: true
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+        dnsPolicy: ClusterFirst
+        restartPolicy: Always
+        schedulerName: default-scheduler
+        securityContext: {}
+        serviceAccount: loki
+        serviceAccountName: loki
+        terminationGracePeriodSeconds: 60
+    updateStrategy:
+      type: RollingUpdate
+  status:
+    availableReplicas: 1
+    collisionCount: 0
+    currentReplicas: 1
+    currentRevision: loki-results-cache-7d9bd9db9c
+    observedGeneration: 1
+    readyReplicas: 1
+    replicas: 1
+    updateRevision: loki-results-cache-7d9bd9db9c
+    updatedReplicas: 1
+- apiVersion: apps/v1
+  kind: StatefulSet
+  metadata:
+    annotations:
+      meta.helm.sh/release-name: loki
+      meta.helm.sh/release-namespace: default
+    creationTimestamp: "2024-06-19T05:53:33Z"
+    generation: 1
+    labels:
+      app.kubernetes.io/component: write
+      app.kubernetes.io/instance: loki
+      app.kubernetes.io/managed-by: Helm
+      app.kubernetes.io/name: loki
+      app.kubernetes.io/part-of: memberlist
+      app.kubernetes.io/version: 3.0.0
+      helm.sh/chart: loki-6.6.3
+    name: loki-write
+    namespace: default
+    resourceVersion: "3005"
+    uid: eaf1020f-d72e-40ac-86eb-8d171ed27163
+  spec:
+    persistentVolumeClaimRetentionPolicy:
+      whenDeleted: Retain
+      whenScaled: Retain
+    podManagementPolicy: Parallel
+    replicas: 2
+    revisionHistoryLimit: 10
+    selector:
+      matchLabels:
+        app.kubernetes.io/component: write
+        app.kubernetes.io/instance: loki
+        app.kubernetes.io/name: loki
+    serviceName: loki-write-headless
+    template:
+      metadata:
+        annotations:
+          checksum/config: 62dcad17d9932a80434500de5e3f7436f2fd18340468da00fd85c5dbf77a95e9
+        creationTimestamp: null
+        labels:
+          app.kubernetes.io/component: write
+          app.kubernetes.io/instance: loki
+          app.kubernetes.io/name: loki
+          app.kubernetes.io/part-of: memberlist
+      spec:
+        affinity:
+          podAntiAffinity:
+            requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchLabels:
+                  app.kubernetes.io/component: write
+              topologyKey: kubernetes.io/hostname
+        automountServiceAccountToken: true
+        containers:
+        - args:
+          - -config.file=/etc/loki/config/config.yaml
+          - -target=write
+          image: docker.io/grafana/loki:3.0.0
+          imagePullPolicy: IfNotPresent
+          name: loki
+          ports:
+          - containerPort: 3100
+            name: http-metrics
+            protocol: TCP
+          - containerPort: 9095
+            name: grpc
+            protocol: TCP
+          - containerPort: 7946
+            name: http-memberlist
+            protocol: TCP
+          readinessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /ready
+              port: http-metrics
+              scheme: HTTP
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 1
+          resources: {}
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+              - ALL
+            readOnlyRootFilesystem: true
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          volumeMounts:
+          - mountPath: /etc/loki/config
+            name: config
+          - mountPath: /etc/loki/runtime-config
+            name: runtime-config
+          - mountPath: /var/loki
+            name: data
+        dnsPolicy: ClusterFirst
+        enableServiceLinks: true
+        restartPolicy: Always
+        schedulerName: default-scheduler
+        securityContext:
+          fsGroup: 10001
+          runAsGroup: 10001
+          runAsNonRoot: true
+          runAsUser: 10001
+        serviceAccount: loki
+        serviceAccountName: loki
+        terminationGracePeriodSeconds: 300
+        volumes:
+        - configMap:
+            defaultMode: 420
+            items:
+            - key: config.yaml
+              path: config.yaml
+            name: loki
+          name: config
+        - configMap:
+            defaultMode: 420
+            name: loki-runtime
+          name: runtime-config
+    updateStrategy:
+      rollingUpdate:
+        partition: 0
+      type: RollingUpdate
+    volumeClaimTemplates:
+    - apiVersion: v1
+      kind: PersistentVolumeClaim
+      metadata:
+        creationTimestamp: null
+        name: data
+      spec:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: 10Gi
+        volumeMode: Filesystem
+      status:
+        phase: Pending
+  status:
+    availableReplicas: 2
+    collisionCount: 0
+    currentReplicas: 2
+    currentRevision: loki-write-bbddc67df
+    observedGeneration: 1
+    readyReplicas: 2
+    replicas: 2
+    updateRevision: loki-write-bbddc67df
+    updatedReplicas: 2
+kind: List
+metadata:
+  resourceVersion: ""
