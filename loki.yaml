@@ -1,4 +1,9 @@
-auth_enabled: true
+controlplane $ k get cm loki -oyaml
+apiVersion: v1
+data:
+  config.yaml: |2
+
+    auth_enabled: true
     chunk_store_config:
       chunk_cache_config:
         background:
@@ -98,3 +103,19 @@ auth_enabled: true
           server_address: dns+loki-backend-headless.default.svc.cluster.local:9095
     tracing:
       enabled: true
+kind: ConfigMap
+metadata:
+  annotations:
+    meta.helm.sh/release-name: loki
+    meta.helm.sh/release-namespace: default
+  creationTimestamp: "2024-06-19T05:53:32Z"
+  labels:
+    app.kubernetes.io/instance: loki
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: loki
+    app.kubernetes.io/version: 3.0.0
+    helm.sh/chart: loki-6.6.3
+  name: loki
+  namespace: default
+  resourceVersion: "2290"
+  uid: 74942a4d-9d20-41fc-b7c4-ca4efdecd22c
