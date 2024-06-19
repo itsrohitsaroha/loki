@@ -1,0 +1,510 @@
+controlplane $ k get cm  
+NAME               DATA   AGE
+kube-root-ca.crt   1      11d
+loki               1      32m
+loki-gateway       1      32m
+loki-minio         4      32m
+loki-runtime       1      32m
+controlplane $ k get cm -oyaml
+apiVersion: v1
+items:
+- apiVersion: v1
+  data:
+    ca.crt: |
+      -----BEGIN CERTIFICATE-----
+      MIIDBTCCAe2gAwIBAgIITn+74MlfPvMwDQYJKoZIhvcNAQELBQAwFTETMBEGA1UE
+      AxMKa3ViZXJuZXRlczAeFw0yNDA2MDgwNjA1MDNaFw0zNDA2MDYwNjEwMDNaMBUx
+      EzARBgNVBAMTCmt1YmVybmV0ZXMwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEK
+      AoIBAQC5K9K2GladJ/pJiMqHN65D9ygzUtNwNlDEajnKOct0yUohTBaHiLV4r0i1
+      bgs/vpc9t8MYvSUf7fvkU0oo9VA7qkkw08LVXzO6sX1RlqIoql1eApjHoITP5kx0
+      yfm27PAU7ufSVIYmGQoH6YSqWbCAlScWOelW0MN5BhhfEr1oyCdLNnkuZTEzbsRy
+      GRRyIRnxOeOJygNJ6oVOrcsylg68VCGCFfAaB9juEryWS19qlrWEJWpYX2d3c19l
+      p5hKiPfiMLSMMNgWtKolbTZZ9FbYtBXYGTNtCp2LOZOAcLCu8rr+98ZMLo4ECI5h
+      QA7g/FFZYbb0ppdaVV4yfyzWwF7DAgMBAAGjWTBXMA4GA1UdDwEB/wQEAwICpDAP
+      BgNVHRMBAf8EBTADAQH/MB0GA1UdDgQWBBR8sXbbKC/ATU+tVhUsYPjsnY6nTTAV
+      BgNVHREEDjAMggprdWJlcm5ldGVzMA0GCSqGSIb3DQEBCwUAA4IBAQCSCl7gzpoc
+      rM1SuBW666cJqj4wQ57Jy1dLSJQcANY0XZfEW7EMy8s9ZlnKURNAlLlzK9zfpiuY
+      K3tfBNxwkUUXsj1G2LZ1pKMVWfYczyaBfU+g5gg1ftPBUS3J4qGfuYZNzXagbCUj
+      mpgSI0XFpO8Opf+cERzLqxVc9ILlAhpYIYCjvc8auqnSUCp3H4XB5zSFrlkYxZHw
+      MTHi/21PRKIEFSNCQy2b703Mg6PFVjeokXLcqZMhRk1nkIqCMSJr2JS1PZJJB77q
+      xlTGfTvf6+bKWVDw5u/sf7cXTaGJqoUnYD6k5ytlfkrZfxhDx9MDETG9mkBDffnM
+      //c7XkhFP3g0
+      -----END CERTIFICATE-----
+  kind: ConfigMap
+  metadata:
+    annotations:
+      kubernetes.io/description: Contains a CA bundle that can be used to verify the
+        kube-apiserver when using internal endpoints such as the internal service
+        IP or kubernetes.default.svc. No other usage is guaranteed across distributions
+        of Kubernetes clusters.
+    creationTimestamp: "2024-06-08T06:10:27Z"
+    name: kube-root-ca.crt
+    namespace: default
+    resourceVersion: "412"
+    uid: 90ae3b80-d6ce-4bb9-ad84-f6715f93a67a
+- apiVersion: v1
+  data:
+    config.yaml: |2
+
+      auth_enabled: true
+      chunk_store_config:
+        chunk_cache_config:
+          background:
+            writeback_buffer: 500000
+            writeback_goroutines: 1
+            writeback_size_limit: 500MB
+          default_validity: 0s
+          memcached:
+            batch_size: 4
+            parallelism: 5
+          memcached_client:
+            addresses: dnssrvnoa+_memcached-client._tcp.loki-chunks-cache.default.svc
+            consistent_hash: true
+            max_idle_conns: 72
+            timeout: 2000ms
+      common:
+        compactor_address: 'http://loki-backend:3100'
+        path_prefix: /var/loki
+        replication_factor: 3
+        storage:
+          s3:
+            access_key_id: enterprise-logs
+            bucketnames: chunks
+            endpoint: loki-minio.default.svc:9000
+            insecure: true
+            s3forcepathstyle: true
+            secret_access_key: supersecret
+      frontend:
+        scheduler_address: ""
+        tail_proxy_url: http://loki-querier.default.svc.cluster.local:3100
+      frontend_worker:
+        scheduler_address: ""
+      index_gateway:
+        mode: simple
+      ingester:
+        chunk_encoding: snappy
+      limits_config:
+        max_cache_freshness_per_query: 10m
+        query_timeout: 300s
+        reject_old_samples: true
+        reject_old_samples_max_age: 168h
+        split_queries_by_interval: 15m
+        volume_enabled: true
+      memberlist:
+        join_members:
+        - loki-memberlist
+      pattern_ingester:
+        enabled: false
+      querier:
+        max_concurrent: 4
+      query_range:
+        align_queries_with_step: true
+        cache_results: true
+        results_cache:
+          cache:
+            background:
+              writeback_buffer: 500000
+              writeback_goroutines: 1
+              writeback_size_limit: 500MB
+            default_validity: 12h
+            memcached_client:
+              addresses: dnssrvnoa+_memcached-client._tcp.loki-results-cache.default.svc
+              consistent_hash: true
+              timeout: 500ms
+              update_interval: 1m
+      ruler:
+        storage:
+          s3:
+            bucketnames: ruler
+          type: s3
+      runtime_config:
+        file: /etc/loki/runtime-config/runtime-config.yaml
+      schema_config:
+        configs:
+        - from: "2024-04-01"
+          index:
+            period: 24h
+            prefix: loki_index_
+          object_store: s3
+          schema: v13
+          store: tsdb
+      server:
+        grpc_listen_port: 9095
+        http_listen_port: 3100
+        http_server_read_timeout: 600s
+        http_server_write_timeout: 600s
+      storage_config:
+        boltdb_shipper:
+          index_gateway_client:
+            server_address: dns+loki-backend-headless.default.svc.cluster.local:9095
+        hedging:
+          at: 250ms
+          max_per_second: 20
+          up_to: 3
+        tsdb_shipper:
+          index_gateway_client:
+            server_address: dns+loki-backend-headless.default.svc.cluster.local:9095
+      tracing:
+        enabled: true
+  kind: ConfigMap
+  metadata:
+    annotations:
+      meta.helm.sh/release-name: loki
+      meta.helm.sh/release-namespace: default
+    creationTimestamp: "2024-06-19T05:53:32Z"
+    labels:
+      app.kubernetes.io/instance: loki
+      app.kubernetes.io/managed-by: Helm
+      app.kubernetes.io/name: loki
+      app.kubernetes.io/version: 3.0.0
+      helm.sh/chart: loki-6.6.3
+    name: loki
+    namespace: default
+    resourceVersion: "2290"
+    uid: 74942a4d-9d20-41fc-b7c4-ca4efdecd22c
+- apiVersion: v1
+  data:
+    nginx.conf: "worker_processes  5;  ## Default: 1\nerror_log  /dev/stderr;\npid
+      \       /tmp/nginx.pid;\nworker_rlimit_nofile 8192;\n\nevents {\n  worker_connections
+      \ 4096;  ## Default: 1024\n}\n\nhttp {\n  client_body_temp_path /tmp/client_temp;\n
+      \ proxy_temp_path       /tmp/proxy_temp_path;\n  fastcgi_temp_path     /tmp/fastcgi_temp;\n
+      \ uwsgi_temp_path       /tmp/uwsgi_temp;\n  scgi_temp_path        /tmp/scgi_temp;\n\n
+      \ client_max_body_size  4M;\n\n  proxy_read_timeout    600; ## 10 minutes\n
+      \ proxy_send_timeout    600;\n  proxy_connect_timeout 600;\n\n  proxy_http_version
+      \   1.1;\n\n  default_type application/octet-stream;\n  log_format   main '$remote_addr
+      - $remote_user [$time_local]  $status '\n        '\"$request\" $body_bytes_sent
+      \"$http_referer\" '\n        '\"$http_user_agent\" \"$http_x_forwarded_for\"';\n
+      \ access_log   /dev/stderr  main;\n\n  sendfile     on;\n  tcp_nopush   on;\n
+      \ resolver kube-dns.kube-system.svc.cluster.local.;\n  \n\n  server {\n    listen
+      \            8080;\n    listen             [::]:8080;\n\n    location = / {\n
+      \     return 200 'OK';\n      auth_basic off;\n    }\n\n    ########################################################\n
+      \   # Configure backend targets# Distributor\n    location = /api/prom/push
+      {\n      proxy_pass       http://loki-write.default.svc.cluster.local:3100$request_uri;\n
+      \   }\n    location = /loki/api/v1/push {\n      proxy_pass       http://loki-write.default.svc.cluster.local:3100$request_uri;\n
+      \   }\n    location = /distributor/ring {\n      proxy_pass       http://loki-write.default.svc.cluster.local:3100$request_uri;\n
+      \   }\n    location = /otlp/v1/logs {\n      proxy_pass       http://loki-write.default.svc.cluster.local:3100$request_uri;\n
+      \   }\n\n    # Ingester\n    location = /flush {\n      proxy_pass       http://loki-write.default.svc.cluster.local:3100$request_uri;\n
+      \   }\n    location ^~ /ingester/ {\n      proxy_pass       http://loki-write.default.svc.cluster.local:3100$request_uri;\n
+      \   }\n    location = /ingester {\n      internal;        # to suppress 301\n
+      \   }\n\n    # Ring\n    location = /ring {\n      proxy_pass       http://loki-write.default.svc.cluster.local:3100$request_uri;\n
+      \   }\n\n    # MemberListKV\n    location = /memberlist {\n      proxy_pass
+      \      http://loki-write.default.svc.cluster.local:3100$request_uri;\n    }\n\n
+      \   # Ruler\n    location = /ruler/ring {\n      proxy_pass       http://loki-backend.default.svc.cluster.local:3100$request_uri;\n
+      \   }\n    location = /api/prom/rules {\n      proxy_pass       http://loki-backend.default.svc.cluster.local:3100$request_uri;\n
+      \   }\n    location ^~ /api/prom/rules/ {\n      proxy_pass       http://loki-backend.default.svc.cluster.local:3100$request_uri;\n
+      \   }\n    location = /loki/api/v1/rules {\n      proxy_pass       http://loki-backend.default.svc.cluster.local:3100$request_uri;\n
+      \   }\n    location ^~ /loki/api/v1/rules/ {\n      proxy_pass       http://loki-backend.default.svc.cluster.local:3100$request_uri;\n
+      \   }\n    location = /prometheus/api/v1/alerts {\n      proxy_pass       http://loki-backend.default.svc.cluster.local:3100$request_uri;\n
+      \   }\n    location = /prometheus/api/v1/rules {\n      proxy_pass       http://loki-backend.default.svc.cluster.local:3100$request_uri;\n
+      \   }\n\n    # Compactor\n    location = /compactor/ring {\n      proxy_pass
+      \      http://loki-backend.default.svc.cluster.local:3100$request_uri;\n    }\n
+      \   location = /loki/api/v1/delete {\n      proxy_pass       http://loki-backend.default.svc.cluster.local:3100$request_uri;\n
+      \   }\n    location = /loki/api/v1/cache/generation_numbers {\n      proxy_pass
+      \      http://loki-backend.default.svc.cluster.local:3100$request_uri;\n    }\n\n
+      \   # IndexGateway\n    location = /indexgateway/ring {\n      proxy_pass       http://loki-backend.default.svc.cluster.local:3100$request_uri;\n
+      \   }\n\n    # QueryScheduler\n    location = /scheduler/ring {\n      proxy_pass
+      \      http://loki-backend.default.svc.cluster.local:3100$request_uri;\n    }\n\n
+      \   # Config\n    location = /config {\n      proxy_pass       http://loki-write.default.svc.cluster.local:3100$request_uri;\n
+      \   }\n\n\n    # QueryFrontend, Querier\n    location = /api/prom/tail {\n      proxy_pass
+      \      http://loki-read.default.svc.cluster.local:3100$request_uri;\n      proxy_set_header
+      Upgrade $http_upgrade;\n      proxy_set_header Connection \"upgrade\";\n    }\n
+      \   location = /loki/api/v1/tail {\n      proxy_pass       http://loki-read.default.svc.cluster.local:3100$request_uri;\n
+      \     proxy_set_header Upgrade $http_upgrade;\n      proxy_set_header Connection
+      \"upgrade\";\n    }\n    location ^~ /api/prom/ {\n      proxy_pass       http://loki-read.default.svc.cluster.local:3100$request_uri;\n
+      \   }\n    location = /api/prom {\n      internal;        # to suppress 301\n
+      \   }\n    location ^~ /loki/api/v1/ {\n      proxy_pass       http://loki-read.default.svc.cluster.local:3100$request_uri;\n
+      \   }\n    location = /loki/api/v1 {\n      internal;        # to suppress 301\n
+      \   }\n  }\n}\n"
+  kind: ConfigMap
+  metadata:
+    annotations:
+      meta.helm.sh/release-name: loki
+      meta.helm.sh/release-namespace: default
+    creationTimestamp: "2024-06-19T05:53:32Z"
+    labels:
+      app.kubernetes.io/component: gateway
+      app.kubernetes.io/instance: loki
+      app.kubernetes.io/managed-by: Helm
+      app.kubernetes.io/name: loki
+      app.kubernetes.io/version: 3.0.0
+      helm.sh/chart: loki-6.6.3
+    name: loki-gateway
+    namespace: default
+    resourceVersion: "2291"
+    uid: d58300db-c7bf-4220-a668-9a706395001b
+- apiVersion: v1
+  data:
+    add-policy: |-
+      #!/bin/sh
+      set -e ; # Have script exit in the event of a failed command.
+      MC_CONFIG_DIR="/etc/minio/mc/"
+      MC="/usr/bin/mc --insecure --config-dir ${MC_CONFIG_DIR}"
+
+      # connectToMinio
+      # Use a check-sleep-check loop to wait for MinIO service to be available
+      connectToMinio() {
+        SCHEME=$1
+        ATTEMPTS=0 ; LIMIT=29 ; # Allow 30 attempts
+        set -e ; # fail if we can't read the keys.
+        ACCESS=$(cat /config/rootUser) ; SECRET=$(cat /config/rootPassword) ;
+        set +e ; # The connections to minio are allowed to fail.
+        echo "Connecting to MinIO server: $SCHEME://$MINIO_ENDPOINT:$MINIO_PORT" ;
+        MC_COMMAND="${MC} alias set myminio $SCHEME://$MINIO_ENDPOINT:$MINIO_PORT $ACCESS $SECRET" ;
+        $MC_COMMAND ;
+        STATUS=$? ;
+        until [ $STATUS = 0 ]
+        do
+          ATTEMPTS=`expr $ATTEMPTS + 1` ;
+          echo \"Failed attempts: $ATTEMPTS\" ;
+          if [ $ATTEMPTS -gt $LIMIT ]; then
+            exit 1 ;
+          fi ;
+          sleep 2 ; # 1 second intervals between attempts
+          $MC_COMMAND ;
+          STATUS=$? ;
+        done ;
+        set -e ; # reset `e` as active
+        return 0
+      }
+
+      # checkPolicyExists ($policy)
+      # Check if the policy exists, by using the exit code of `mc admin policy info`
+      checkPolicyExists() {
+        POLICY=$1
+        CMD=$(${MC} admin policy info myminio $POLICY > /dev/null 2>&1)
+        return $?
+      }
+
+      # createPolicy($name, $filename)
+      createPolicy () {
+        NAME=$1
+        FILENAME=$2
+
+        # Create the name if it does not exist
+        echo "Checking policy: $NAME (in /config/$FILENAME.json)"
+        if ! checkPolicyExists $NAME ; then
+          echo "Creating policy '$NAME'"
+        else
+          echo "Policy '$NAME' already exists."
+        fi
+        ${MC} admin policy add myminio $NAME /config/$FILENAME.json
+
+      }
+
+      # Try connecting to MinIO instance
+      scheme=http
+      connectToMinio $scheme
+    add-user: |-
+      #!/bin/sh
+      set -e ; # Have script exit in the event of a failed command.
+      MC_CONFIG_DIR="/etc/minio/mc/"
+      MC="/usr/bin/mc --insecure --config-dir ${MC_CONFIG_DIR}"
+
+      # AccessKey and secretkey credentials file are added to prevent shell execution errors caused by special characters.
+      # Special characters for example : ',",<,>,{,}
+      MINIO_ACCESSKEY_SECRETKEY_TMP="/tmp/accessKey_and_secretKey_tmp"
+
+      # connectToMinio
+      # Use a check-sleep-check loop to wait for MinIO service to be available
+      connectToMinio() {
+        SCHEME=$1
+        ATTEMPTS=0 ; LIMIT=29 ; # Allow 30 attempts
+        set -e ; # fail if we can't read the keys.
+        ACCESS=$(cat /config/rootUser) ; SECRET=$(cat /config/rootPassword) ;
+        set +e ; # The connections to minio are allowed to fail.
+        echo "Connecting to MinIO server: $SCHEME://$MINIO_ENDPOINT:$MINIO_PORT" ;
+        MC_COMMAND="${MC} alias set myminio $SCHEME://$MINIO_ENDPOINT:$MINIO_PORT $ACCESS $SECRET" ;
+        $MC_COMMAND ;
+        STATUS=$? ;
+        until [ $STATUS = 0 ]
+        do
+          ATTEMPTS=`expr $ATTEMPTS + 1` ;
+          echo \"Failed attempts: $ATTEMPTS\" ;
+          if [ $ATTEMPTS -gt $LIMIT ]; then
+            exit 1 ;
+          fi ;
+          sleep 2 ; # 1 second intervals between attempts
+          $MC_COMMAND ;
+          STATUS=$? ;
+        done ;
+        set -e ; # reset `e` as active
+        return 0
+      }
+
+      # checkUserExists ()
+      # Check if the user exists, by using the exit code of `mc admin user info`
+      checkUserExists() {
+        CMD=$(${MC} admin user info myminio $(head -1 $MINIO_ACCESSKEY_SECRETKEY_TMP) > /dev/null 2>&1)
+        return $?
+      }
+
+      # createUser ($policy)
+      createUser() {
+        POLICY=$1
+        #check accessKey_and_secretKey_tmp file
+        if [[ ! -f $MINIO_ACCESSKEY_SECRETKEY_TMP ]];then
+          echo "credentials file does not exist"
+          return 1
+        fi
+        if [[ $(cat $MINIO_ACCESSKEY_SECRETKEY_TMP|wc -l) -ne 2 ]];then
+          echo "credentials file is invalid"
+          rm -f $MINIO_ACCESSKEY_SECRETKEY_TMP
+          return 1
+        fi
+        USER=$(head -1 $MINIO_ACCESSKEY_SECRETKEY_TMP)
+        # Create the user if it does not exist
+        if ! checkUserExists ; then
+          echo "Creating user '$USER'"
+          cat $MINIO_ACCESSKEY_SECRETKEY_TMP | ${MC} admin user add myminio
+        else
+          echo "User '$USER' already exists."
+        fi
+        #clean up credentials files.
+        rm -f $MINIO_ACCESSKEY_SECRETKEY_TMP
+
+        # set policy for user
+        if [ ! -z $POLICY -a $POLICY != " " ] ; then
+            echo "Adding policy '$POLICY' for '$USER'"
+            ${MC} admin policy set myminio $POLICY user=$USER
+        else
+            echo "User '$USER' has no policy attached."
+        fi
+      }
+
+      # Try connecting to MinIO instance
+      scheme=http
+      connectToMinio $scheme
+
+
+
+      # Create the users
+      echo console > $MINIO_ACCESSKEY_SECRETKEY_TMP
+      echo console123 >> $MINIO_ACCESSKEY_SECRETKEY_TMP
+      createUser consoleAdmin
+    custom-command: |-
+      #!/bin/sh
+      set -e ; # Have script exit in the event of a failed command.
+      MC_CONFIG_DIR="/etc/minio/mc/"
+      MC="/usr/bin/mc --insecure --config-dir ${MC_CONFIG_DIR}"
+
+      # connectToMinio
+      # Use a check-sleep-check loop to wait for MinIO service to be available
+      connectToMinio() {
+        SCHEME=$1
+        ATTEMPTS=0 ; LIMIT=29 ; # Allow 30 attempts
+        set -e ; # fail if we can't read the keys.
+        ACCESS=$(cat /config/rootUser) ; SECRET=$(cat /config/rootPassword) ;
+        set +e ; # The connections to minio are allowed to fail.
+        echo "Connecting to MinIO server: $SCHEME://$MINIO_ENDPOINT:$MINIO_PORT" ;
+        MC_COMMAND="${MC} alias set myminio $SCHEME://$MINIO_ENDPOINT:$MINIO_PORT $ACCESS $SECRET" ;
+        $MC_COMMAND ;
+        STATUS=$? ;
+        until [ $STATUS = 0 ]
+        do
+          ATTEMPTS=`expr $ATTEMPTS + 1` ;
+          echo \"Failed attempts: $ATTEMPTS\" ;
+          if [ $ATTEMPTS -gt $LIMIT ]; then
+            exit 1 ;
+          fi ;
+          sleep 2 ; # 1 second intervals between attempts
+          $MC_COMMAND ;
+          STATUS=$? ;
+        done ;
+        set -e ; # reset `e` as active
+        return 0
+      }
+
+      # runCommand ($@)
+      # Run custom mc command
+      runCommand() {
+        ${MC} "$@"
+        return $?
+      }
+
+      # Try connecting to MinIO instance
+      scheme=http
+      connectToMinio $scheme
+    initialize: "#!/bin/sh\nset -e ; # Have script exit in the event of a failed command.\nMC_CONFIG_DIR=\"/etc/minio/mc/\"\nMC=\"/usr/bin/mc
+      --insecure --config-dir ${MC_CONFIG_DIR}\"\n\n# connectToMinio\n# Use a check-sleep-check
+      loop to wait for MinIO service to be available\nconnectToMinio() {\n  SCHEME=$1\n
+      \ ATTEMPTS=0 ; LIMIT=29 ; # Allow 30 attempts\n  set -e ; # fail if we can't
+      read the keys.\n  ACCESS=$(cat /config/rootUser) ; SECRET=$(cat /config/rootPassword)
+      ;\n  set +e ; # The connections to minio are allowed to fail.\n  echo \"Connecting
+      to MinIO server: $SCHEME://$MINIO_ENDPOINT:$MINIO_PORT\" ;\n  MC_COMMAND=\"${MC}
+      alias set myminio $SCHEME://$MINIO_ENDPOINT:$MINIO_PORT $ACCESS $SECRET\" ;\n
+      \ $MC_COMMAND ;\n  STATUS=$? ;\n  until [ $STATUS = 0 ]\n  do\n    ATTEMPTS=`expr
+      $ATTEMPTS + 1` ;\n    echo \\\"Failed attempts: $ATTEMPTS\\\" ;\n    if [ $ATTEMPTS
+      -gt $LIMIT ]; then\n      exit 1 ;\n    fi ;\n    sleep 2 ; # 1 second intervals
+      between attempts\n    $MC_COMMAND ;\n    STATUS=$? ;\n  done ;\n  set -e ; #
+      reset `e` as active\n  return 0\n}\n\n# checkBucketExists ($bucket)\n# Check
+      if the bucket exists, by using the exit code of `mc ls`\ncheckBucketExists()
+      {\n  BUCKET=$1\n  CMD=$(${MC} ls myminio/$BUCKET > /dev/null 2>&1)\n  return
+      $?\n}\n\n# createBucket ($bucket, $policy, $purge)\n# Ensure bucket exists,
+      purging if asked to\ncreateBucket() {\n  BUCKET=$1\n  POLICY=$2\n  PURGE=$3\n
+      \ VERSIONING=$4\n  OBJECTLOCKING=$5\n\n  # Purge the bucket, if set & exists\n
+      \ # Since PURGE is user input, check explicitly for `true`\n  if [ $PURGE =
+      true ]; then\n    if checkBucketExists $BUCKET ; then\n      echo \"Purging
+      bucket '$BUCKET'.\"\n      set +e ; # don't exit if this fails\n      ${MC}
+      rm -r --force myminio/$BUCKET\n      set -e ; # reset `e` as active\n    else\n
+      \     echo \"Bucket '$BUCKET' does not exist, skipping purge.\"\n    fi\n  fi\n\n#
+      Create the bucket if it does not exist and set objectlocking if enabled (NOTE:
+      versioning will be not changed if OBJECTLOCKING is set because it enables versioning
+      to the Buckets created)\nif ! checkBucketExists $BUCKET ; then\n    if [ ! -z
+      $OBJECTLOCKING ] ; then\n      if [ $OBJECTLOCKING = true ] ; then\n          echo
+      \"Creating bucket with OBJECTLOCKING '$BUCKET'\"\n          ${MC} mb --with-lock
+      myminio/$BUCKET\n      elif [ $OBJECTLOCKING = false ] ; then\n            echo
+      \"Creating bucket '$BUCKET'\"\n            ${MC} mb myminio/$BUCKET\n      fi\n
+      \ elif [ -z $OBJECTLOCKING ] ; then\n        echo \"Creating bucket '$BUCKET'\"\n
+      \       ${MC} mb myminio/$BUCKET\n  else\n    echo \"Bucket '$BUCKET' already
+      exists.\"  \n  fi\n  fi\n\n\n  # set versioning for bucket if objectlocking
+      is disabled or not set\n  if [ -z $OBJECTLOCKING ] ; then\n  if [ ! -z $VERSIONING
+      ] ; then\n    if [ $VERSIONING = true ] ; then\n        echo \"Enabling versioning
+      for '$BUCKET'\"\n        ${MC} version enable myminio/$BUCKET\n    elif [ $VERSIONING
+      = false ] ; then\n        echo \"Suspending versioning for '$BUCKET'\"\n        ${MC}
+      version suspend myminio/$BUCKET\n    fi\n    fi\n  else\n      echo \"Bucket
+      '$BUCKET' versioning unchanged.\"\n  fi\n\n\n  # At this point, the bucket should
+      exist, skip checking for existence\n  # Set policy on the bucket\n  echo \"Setting
+      policy of bucket '$BUCKET' to '$POLICY'.\"\n  ${MC} policy set $POLICY myminio/$BUCKET\n}\n\n#
+      Try connecting to MinIO instance\nscheme=http\nconnectToMinio $scheme\n\n\n\n#
+      Create the buckets\ncreateBucket chunks none false  \ncreateBucket ruler none
+      false  \ncreateBucket admin none false  "
+  kind: ConfigMap
+  metadata:
+    annotations:
+      meta.helm.sh/release-name: loki
+      meta.helm.sh/release-namespace: default
+    creationTimestamp: "2024-06-19T05:53:32Z"
+    labels:
+      app: minio
+      app.kubernetes.io/managed-by: Helm
+      chart: minio-4.0.15
+      heritage: Helm
+      release: loki
+    name: loki-minio
+    namespace: default
+    resourceVersion: "2292"
+    uid: 5e59b108-818b-4ac3-b9a8-fc579e00c7ea
+- apiVersion: v1
+  data:
+    runtime-config.yaml: |
+      {}
+  kind: ConfigMap
+  metadata:
+    annotations:
+      meta.helm.sh/release-name: loki
+      meta.helm.sh/release-namespace: default
+    creationTimestamp: "2024-06-19T05:53:32Z"
+    labels:
+      app.kubernetes.io/instance: loki
+      app.kubernetes.io/managed-by: Helm
+      app.kubernetes.io/name: loki
+      app.kubernetes.io/version: 3.0.0
+      helm.sh/chart: loki-6.6.3
+    name: loki-runtime
+    namespace: default
+    resourceVersion: "2289"
+    uid: 075bf69b-6e60-4dab-8ff0-134b533b2857
+kind: List
+metadata:
+  resourceVersion: ""
+controlplane $ 
