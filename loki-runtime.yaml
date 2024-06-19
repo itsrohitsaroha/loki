@@ -1,0 +1,21 @@
+k get cm loki-runtime -oyaml
+apiVersion: v1
+data:
+  runtime-config.yaml: |
+    {}
+kind: ConfigMap
+metadata:
+  annotations:
+    meta.helm.sh/release-name: loki
+    meta.helm.sh/release-namespace: default
+  creationTimestamp: "2024-06-19T05:53:32Z"
+  labels:
+    app.kubernetes.io/instance: loki
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: loki
+    app.kubernetes.io/version: 3.0.0
+    helm.sh/chart: loki-6.6.3
+  name: loki-runtime
+  namespace: default
+  resourceVersion: "2289"
+  uid: 075bf69b-6e60-4dab-8ff0-134b533b2857
